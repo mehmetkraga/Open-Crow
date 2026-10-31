@@ -1,0 +1,46 @@
+{
+  "name": "open-crow",
+  "version": "1.9.0",
+  "description": "Open Crow — AI destekli masaüstü kodlama asistanı (kendi API anahtarınla çalışır)",
+  "author": "mehmetkraga",
+  "private": true,
+  "main": "dist-electron/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "test": "vitest run",
+    "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:linux": "npm run build && electron-builder --linux",
+    "dist:all": "npm run build && electron-builder -mwl",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/addon-web-links": "^0.11.0",
+    "@xterm/xterm": "^5.5.0",
+    "docx": "^9.8.1",
+    "dompurify": "^3.2.4",
+    "jszip": "^3.10.2",
+    "marked": "^15.0.7",
+    "mermaid": "^11.17.2",
+    "monaco-editor": "^0.52.2",
+    "pdfjs-dist": "^4.10.38",
+    "pptxgenjs": "^4.0.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/dompurify": "^3.0.5",
+    "@types/node": "^22.13.9",
+    "electron": "^35.1.2",
+    "electron-builder": "^26.15.3",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.0",
+    "vite-plugin-electron": "^0.29.0",
+    "vite-plugin-electron-renderer": "^0.14.6",
+    "vitest": "^5.0.2"
+  }
+}

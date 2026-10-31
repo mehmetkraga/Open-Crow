@@ -1,0 +1,174 @@
+/* =========================================================
+   Open Crow — Glass katmanı
+   style.css'ten sonra yüklenir. Tema renklerini cam yüzeylere,
+   yumuşak geçişlere ve hafif 3D derinliğe çevirir.
+   Yalnızca görünüm: düzen ve davranış style.css'te kalır.
+   ========================================================= */
+
+:root {
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --font-ui: var(--font-body);
+  --font-chat: var(--font-body);
+
+  --oc-radius-lg: 18px;
+  --oc-radius-md: 12px;
+  --oc-radius-sm: 8px;
+
+  --oc-glass-tint: color-mix(in srgb, var(--bg-panel) 55%, transparent);
+  --oc-glass-tint-strong: color-mix(in srgb, var(--bg-panel) 86%, transparent);
+  --oc-glass-solid: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+  --oc-glass-edge: rgba(255, 255, 255, 0.085);
+  --oc-glass-blur: blur(26px) saturate(165%);
+
+  --oc-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.22), 0 8px 22px rgba(0, 0, 0, 0.18);
+  --oc-shadow-2: 0 2px 8px rgba(0, 0, 0, 0.25), 0 26px 60px rgba(0, 0, 0, 0.42);
+
+  --oc-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --oc-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html,
+body {
+  background: var(--bg-main);
+}
+
+/* Arka plan: yavaş hareket eden yumuşak ışık lekeleri.
+   Yalnızca transform animasyonu; düzeni ve boyamayı tetiklemez. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 40% at 18% 18%, color-mix(in srgb, var(--accent-color) 16%, transparent), transparent 70%),
+    radial-gradient(34% 34% at 82% 26%, color-mix(in srgb, var(--accent-purple) 13%, transparent), transparent 70%),
+    radial-gradient(46% 46% at 50% 92%, color-mix(in srgb, var(--accent-magenta) 10%, transparent), transparent 70%);
+  animation: oc-drift 30s var(--oc-ease) infinite alternate;
+  will-change: transform;
+}
+
+@keyframes oc-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(-3%, 2%, 0) scale(1.06); }
+}
+
+/* ---------- Ana çerçeve: cam chrome ---------- */
+
+#titlebar,
+#activityBar,
+#sidebarContainer,
+#bottomPanel {
+  background: var(--oc-glass-tint) !important;
+  -webkit-backdrop-filter: var(--oc-glass-blur);
+  backdrop-filter: var(--oc-glass-blur);
+}
+
+/* Sohbet paneli kaydırmalı olduğu için bulanıklık yerine yarı saydam zemin */
+#agentPanel {
+  background: var(--oc-glass-solid) !important;
+}
+
+#sidebarContainer,
+#agentPanel,
+#bottomPanel {
+  border-color: var(--oc-glass-edge) !important;
+}
+
+/* Editör okunabilirliği için opak kalır */
+#monacoEditorContainer,
+#editorViewport {
+  background-color: var(--bg-main);
+}
+
+/* ---------- Modallar ve açılır pencereler ---------- */
+
+.settings-modal-overlay,
+.shortcuts-modal-overlay,
+.quick-open-overlay,
+.plan-detail-overlay {
+  background: rgba(3, 4, 10, 0.42) !important;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.settings-modal,
+.shortcuts-modal-window,
+.model-popover,
+.context-popover,
+.slash-commands-popover {
+  background: var(--oc-glass-tint-strong) !important;
+  -webkit-backdrop-filter: var(--oc-glass-blur);
+  backdrop-filter: var(--oc-glass-blur);
+  border: 1px solid var(--oc-glass-edge);
+  border-radius: var(--oc-radius-lg);
+  box-shadow: var(--oc-shadow-2);
+  transform-origin: 50% 0%;
+  animation: oc-pop 0.45s var(--oc-ease-out) both;
+}
+
+/* 3D giriş: hafif perspektif, geriden öne süzülme */
+@keyframes oc-pop {
+  from {
+    opacity: 0;
+    transform: perspective(1400px) translate3d(0, 14px, -60px) rotateX(6deg) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1400px) translate3d(0, 0, 0) rotateX(0deg) scale(1);
+  }
+}
+
+/* ---------- Kartlar: derinlik ve hover yükselmesi ---------- */
+
+.settings-card {
+  background: var(--oc-glass-solid);
+  border: 1px solid var(--oc-glass-edge);
+  border-radius: var(--oc-radius-md);
+  box-shadow: var(--oc-shadow-1);
+  transition:
+    transform 0.4s var(--oc-ease-out),
+    box-shadow 0.4s var(--oc-ease-out),
+    border-color 0.3s ease;
+}
+
+.settings-card:hover {
+  transform: perspective(900px) translate3d(0, -2px, 0);
+  box-shadow: var(--oc-shadow-2);
+  border-color: color-mix(in srgb, var(--accent-color) 22%, transparent);
+}
+
+/* ---------- Etkileşim: yumuşak geri bildirim ---------- */
+
+.settings-btn,
+.btn,
+.agent-icon-btn {
+  transition:
+    transform 0.2s var(--oc-ease),
+    background-color 0.25s ease,
+    box-shadow 0.25s ease,
+    opacity 0.2s ease;
+}
+
+.settings-btn:active,
+.btn:active,
+.agent-icon-btn:active {
+  transform: scale(0.97);
+}
+
+/* Yumuşak, ince kaydırma çubukları */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--text-muted) 40%, transparent) transparent;
+}
+
+/* ---------- Erişilebilirlik: hareket azaltma ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  body::before {
+    animation: none !important;
+    transition: none !important;
+  }
+}

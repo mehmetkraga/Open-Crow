@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Crow</title>
+  <link rel="icon" type="image/png" href="./assets/icon.png">
+  <link rel="stylesheet" href="/src/style.css">
+  <link rel="stylesheet" href="/src/glass.css">
+</head>
+<body class="theme-kraga-dark" data-theme="kraga-cyberpunk">
+  <!-- 1. Özel Başlık Çubuğu (Window Titlebar) -->
+  <header class="ide-titlebar" id="titlebar">
+    <div class="titlebar-drag-region">
+      <div class="titlebar-brand">
+        <img src="./assets/images/logo-bird.png" id="brandLogoImg" alt="Kraga" class="brand-logo-img">
+        <img src="./assets/images/logo-kraga-ide-neon.png" id="brandTitleLogoImg" alt="Open Crow" class="brand-title-logo-img">
+        <span class="project-name" id="currentProjectTitle">Klasör Açılmadı</span>
+      </div>
+      <!-- Masaüstü Uygulama Menüsü -->
+      <nav id="appMenuBarMount" class="app-menu-bar-nav"></nav>
+    </div>
+
+    <!-- Merkez Hızlı Arama & Komut Çubuğu (VS Code Style) -->
+    <div class="titlebar-center-search" id="titlebarCenterSearch" title="Dosya veya komut ara (Ctrl+P)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <span class="search-placeholder">Open Crow'de dosya veya komut ara...</span>
+      <kbd>Ctrl+P</kbd>
+    </div>
+
+    <!-- Telemetri ve Bakiye Çipleri -->
+    <div class="topbar-stats" id="topbarStats">
+      <div class="stat-chip balance-chip" id="topbarBalanceChip" title="Kalan Bakiye / Jeton (Tıklayınca Ayarları Aç)">
+        <span id="topbarBalanceIcon" class="chip-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </span>
+        <span id="topbarBalanceVal">0</span>
+      </div>
+
+      <div class="stat-chip token-chip" id="topbarTokenChip" title="Kullanılan Token">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></svg>
+        <span id="topbarTokenVal">0.0M</span>
+      </div>
+    </div>
+
+    <div class="titlebar-actions">
+      <!-- Tema Seçici Dropdown -->
+      <select id="themeSelector" class="theme-select-dropdown" title="Tema Seç"></select>
+
+    </div>
+
+    <!-- Pencere Kontrol Butonları (Windows Standardı En Sağ Sabit) -->
+    <div class="window-controls" id="windowControlsBar">
+      <button id="btnMinimize" class="win-btn" title="Simge Durumuna Küçült" aria-label="Simge Durumuna Küçült">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12h16"/></svg>
+      </button>
+      <button id="btnMaximize" class="win-btn" title="Ekranı Kapla" aria-label="Ekranı Kapla">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="iconMaximize"><rect x="4" y="4" width="16" height="16" rx="1"/></svg>
+      </button>
+      <button id="btnClose" class="win-btn win-btn-close" title="Kapat" aria-label="Kapat">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- 2. IDE Ana Workbench Düzeni -->
+  <div class="ide-workbench">
+    <!-- Sol Etkinlik Çubuğu (Activity Bar - 48px) -->
+    <nav class="activity-bar" id="activityBar"></nav>
+
+    <!-- Sol Kenar Çubuğu Paneli (Sidebar - 260px) -->
+    <aside class="ide-sidebar" id="sidebarContainer">
+      <div class="sidebar-header">
+        <span class="sidebar-title">GEZGİN</span>
+        <div class="sidebar-header-actions">
+          <button id="btnSidebarNewFile" class="sidebar-action-btn" title="Yeni Dosya">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M9 15h6"/><path d="M12 18v-6"/></svg>
+          </button>
+          <button id="btnSidebarNewFolder" class="sidebar-action-btn" title="Yeni Klasör">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 10v6"/><path d="M9 13h6"/><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+          </button>
+          <button id="btnSidebarRefresh" class="sidebar-action-btn" title="Yenile">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+          </button>
+          <button id="btnOpenFolder" class="sidebar-action-btn" title="Klasör Aç">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="file-tree-container" id="fileTree">
+        <div class="empty-tree-notice">
+          <p>Henüz bir proje açık değil.</p>
+          <button id="btnOpenFolderHero" class="btn-primary-sm">Proje Klasörü Seç</button>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button id="btnGraphifyScan" class="btn-sidebar-tool" title="Projeyi Graphify ile Tara">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg>
+          <span>Graphify Analizi</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Sidebar Splitter -->
+    <div class="splitter splitter--horizontal" id="splitterSidebar"></div>
+
+    <!-- 3. Orta Bölüm: Editör ve Terminal -->
+    <section class="ide-center-panel" id="centerPanel">
+      <!-- Visual Studio 2022 Standart Düzenleme ve Debug Araç Çubuğu -->
+      <div class="vs-toolbar-container" id="vsToolbarContainer"></div>
+
+      <!-- Sekmeler Barı (Visual Studio Document Well) -->
+      <div class="editor-tabs-bar" id="tabsBar"></div>
+
+      <!-- Visual Studio 2022 Sınıf ve Üye Gezinti Çubuğu (Class & Member Navigation Bar) -->
+      <div class="vs-nav-bar-container" id="vsNavBarContainer"></div>
+
+      <!-- Gezinme Yolu (Breadcrumbs Bar) -->
+      <div class="editor-breadcrumbs-bar" id="editorBreadcrumbs" style="display: none;"></div>
+
+      <!-- Monaco Editor & Welcome View Container -->
+      <div class="editor-viewport" id="editorViewport">
+        <div id="welcomeView" class="welcome-view-wrapper" style="display: block;"></div>
+        <div id="scriptView" class="script-view-wrapper" style="display: none;"></div>
+        <div id="liveScriptWorkspace" class="live-script-wrapper" style="display: none;"></div>
+        <div id="planWorkspaceView" class="plan-workspace-wrapper" style="display: none;"></div>
+        <div id="sessionWorkspaceView" class="session-workspace-wrapper" style="display: none;"></div>
+        <div id="previewWorkspaceView" class="preview-workspace-wrapper" style="display: none;"></div>
+        <div id="reviewWorkspaceView" class="review-workspace-wrapper" style="display: none;"></div>
+        <div id="spreadsheetWorkspaceView" class="spreadsheet-workspace-wrapper" style="display: none;"></div>
+        <div id="editorEmptyState" class="editor-empty-state-wrapper" style="display: none;"></div>
+        <div id="monacoEditorContainer" class="monaco-wrapper" style="display: none;"></div>
+      </div>
+
+      <!-- Bottom Panel Splitter -->
+      <div class="splitter splitter--vertical" id="splitterBottom"></div>
+
+      <!-- Alt Panel (Terminal & Graphify) -->
+      <div class="bottom-panel" id="bottomPanel">
+        <div class="bottom-panel-header">
+          <div class="bottom-tabs">
+            <button class="bottom-tab active" data-target="terminalTab">Terminal</button>
+            <button class="bottom-tab" data-target="outputTab" id="tabBtnOutput">Çıktı (Output)</button>
+            <button class="bottom-tab" data-target="problemsTab" id="tabBtnProblems">
+              <span>Sorunlar</span>
+              <span class="badge-counter" id="problemsCountBadge" style="display: none;">0</span>
+            </button>
+            <button class="bottom-tab" data-target="graphifyTab">Graphify Bilgi Grafı</button>
+          </div>
+          <button id="btnToggleTerminal" class="btn-action-icon" title="Paneli Katla/Aç">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+          </button>
+        </div>
+        <div class="bottom-panel-body">
+          <div class="tab-content active" id="terminalTab">
+            <div id="xtermContainer" class="xterm-wrapper"></div>
+          </div>
+          <div class="tab-content" id="outputTab">
+            <div id="outputContainer" class="vs-output-container"></div>
+          </div>
+          <div class="tab-content" id="problemsTab">
+            <div id="problemsListContainer" class="problems-container"></div>
+          </div>
+          <div class="tab-content" id="graphifyTab">
+            <div id="graphifyReportView" class="graphify-view">
+              <p class="text-muted">Proje açıldığında kod ilişkileri burada listelenir.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Agent Splitter -->
+    <div class="splitter splitter--horizontal" id="splitterAgent"></div>
+
+    <!-- 4. Sağ Bölüm: Kraga AI Agent Paneli -->
+    <aside class="ide-agent-panel" id="agentPanel">
+      <div class="agent-header">
+        <div class="agent-info">
+          <img src="./assets/images/logo-bird.png" width="22" height="22" alt="Kraga Bird" class="agent-avatar-img">
+          <div>
+            <h3 class="agent-name">Kraga Agent</h3>
+            <span class="agent-status" id="agentStatus">Hazır</span>
+          </div>
+        </div>
+
+        <!-- Sohbet Yönetim Butonları -->
+        <div class="agent-chat-controls">
+          <button id="btnNewChat" class="agent-ctrl-btn" title="Yeni Sohbet">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button id="btnChatHistory" class="agent-ctrl-btn" title="Sohbet Geçmişi">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </button>
+        </div>
+
+        <!-- Antigravity Görünüm Switcher: Sohbet (Chat) vs Oturum & Varlıklar (Auxiliary Pane) -->
+        <div class="agent-view-switcher" id="agentViewSwitcher">
+          <button id="btnViewChat" class="agent-view-btn agent-view-btn--active" title="Sohbet Akışı">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Sohbet</span>
+          </button>
+          <button id="btnViewAuxiliary" class="agent-view-btn" title="Oturum Bağlamı ve Varlıklar (Antigravity Auxiliary Pane)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span>Oturum</span>
+            <span class="aux-total-badge" id="auxTotalBadge" style="display: none;">0</span>
+          </button>
+        </div>
+
+        <!-- Model Bağlam Penceresi Çubuğu (Agent Paneli) -->
+        <div class="context-bar-wrapper agent-context-bar-wrapper" id="agentContextBar" title="Model Bağlam Penceresi (Analiz için tıklayın)">
+          <div class="context-bar-fill" id="agentContextFill" style="width: 0%"></div>
+          <span class="context-bar-text" id="agentContextText">0% / 128K</span>
+        </div>
+
+        <!-- Plan / Act Mod Seçici Switcher -->
+        <div class="agent-mode-switcher" id="agentModeSwitcher">
+          <button class="agent-mode-btn agent-mode-btn--active" data-mode="act" title="Doğrudan Yanıt Modu">Act</button>
+          <button class="agent-mode-btn" data-mode="plan" title="Önce Adım Adım Plan Çıkar">Plan</button>
+        </div>
+      </div>
+
+      <!-- Yukarıdan Kayan Plan & Yükseltme Hap Bildirimi (Floating Plan Banner) -->
+      <div class="agent-floating-banner-container" id="agentFloatingBannerContainer">
+        <div class="agent-floating-plan-banner" id="agentFloatingPlanBanner">
+          <div class="plan-banner-ring-wrap" id="planBannerRingWrap" title="Kalan Kota">
+            <svg class="plan-banner-ring-svg" width="16" height="16" viewBox="0 0 20 20">
+              <circle class="ring-track" cx="10" cy="10" r="7.5"></circle>
+              <circle class="ring-progress" id="planBannerRingProgress" cx="10" cy="10" r="7.5"></circle>
+            </svg>
+          </div>
+          <span class="plan-banner-plan-name" id="planBannerPlanName">Free plan</span>
+          <span class="plan-banner-pct" id="planBannerPct">%100</span>
+          <span class="plan-banner-dot">•</span>
+          <a href="javascript:void(0)" class="plan-banner-upgrade-btn" id="planBannerUpgradeBtn">Upgrade</a>
+          <button type="button" class="plan-banner-close-btn" id="planBannerCloseBtn" title="Kapat" aria-label="Kapat">✕</button>
+        </div>
+      </div>
+
+      <!-- Sohbet Geçmiş Çekmecesi (Antigravity / Cursor Tarzı Slide Drawer) -->
+      <div class="agent-history-drawer" id="agentHistorySidebar" style="display: none;">
+        <div class="history-drawer-content">
+          <div class="history-drawer-header">
+            <div class="history-header-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>Sohbet Geçmişi</span>
+              <span class="history-count-badge" id="historyCountBadge">0</span>
+            </div>
+            <div class="history-header-actions">
+              <button id="btnNewChatInDrawer" class="history-new-btn" title="Yeni Sohbet Başlat">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>Yeni Sohbet</span>
+              </button>
+              <button id="btnOpenSessionWorkspaceFromDrawer" class="history-expand-btn" title="Tam Ekran Çalışma Alanında Aç">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                <span>Tam Ekran</span>
+              </button>
+              <button id="btnCloseHistory" class="history-close-btn" title="Kapat (Esc)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Arama Kutusu -->
+          <div class="history-search-wrapper">
+            <svg class="history-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="chatHistorySearch" class="history-search-input" placeholder="Sohbet ara... (başlık, içerik, model)">
+            <button id="btnClearSearch" class="history-clear-search" style="display: none;" title="Aramayı Temizle">✕</button>
+          </div>
+
+          <!-- Gruplandırılmış Sohbet Listesi -->
+          <div id="chatHistoryList" class="history-sessions-list"></div>
+
+          <!-- Alt Çubuk: Temizle -->
+          <div class="history-drawer-footer">
+            <button id="btnClearAllHistory" class="history-danger-btn" title="Tüm Sohbet Geçmişini Temizle">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span>Tüm Geçmişi Temizle</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agent Mesaj Akışı -->
+      <div class="agent-chat-flow" id="agentChatFlow">
+        <div class="agent-welcome" id="agentWelcomeScreen">
+          <div class="agent-chat-hero-container">
+            <h2 class="agent-chat-hero-title">Ne üzerinde çalışalım?</h2>
+          </div>
+          <div class="agent-welcome-prompts">
+            <button class="welcome-prompt-chip" data-prompt="Proje mimarisini ve dosya yapısını analiz et">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span>Proje mimarisini analiz et</span>
+            </button>
+            <button class="welcome-prompt-chip" data-prompt="/plan Bu projeye yeni bir özellik eklemek istiyorum">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              <span>Yeni özellik planla (/plan)</span>
+            </button>
+            <button class="welcome-prompt-chip" data-prompt="$ git status">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+              <span>Git durumunu incele ($)</span>
+            </button>
+            <button class="welcome-prompt-chip" data-prompt="Kod tabanındaki olası hataları ve eksikleri denetle">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Hata ve güvenlik denetimi</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subagent Konteyner -->
+      <div class="subagent-container" id="subagentContainer" style="display: none;">
+        <div class="subagent-header">
+          <span class="subagent-header-title">Subagent'lar</span>
+          <span class="subagent-count" id="subagentCount">0</span>
+        </div>
+        <div class="subagent-list" id="subagentList"></div>
+      </div>
+
+      <!-- Antigravity Auxiliary Pane (Oturum Bağlamı, Alt Ajanlar, Değiştirilen Dosyalar, Varlıklar ve Yüklemeler) -->
+      <div class="agent-auxiliary-pane" id="agentAuxiliaryPane" style="display: none;"></div>
+
+      <!-- Agent Girdi Alanı (Modern Tek Parça Kart) -->
+      <div class="agent-input-container">
+        <div class="agent-input-card" id="agentInputCard">
+          <!-- Eklenen Dosyalar Çubuğu (Widget Listesi) -->
+          <div class="agent-attached-files-bar" id="agentAttachedFilesBar" style="display: none;"></div>
+
+          <!-- Textarea: 100% Genişlik, Otomatik Büyüme, Ferah Yazım -->
+          <textarea id="agentPromptInput" placeholder="Kraga Agent ile çalış... (Shift+Enter yeni satır, / komutlar, @ bağlam)" rows="1"></textarea>
+
+          <!-- Alt Araç ve Aksiyon Çubuğu -->
+          <div class="agent-input-toolbar">
+            <div class="agent-input-tools-left">
+              <!-- + Ataç Butonu -->
+              <button class="agent-round-attach-btn" type="button" id="btnAttachFile" title="Dosya veya görsel ekle (Tüm formatlar)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <input type="file" id="mediaFileInput" style="display: none;" multiple accept="*" />
+
+              <!-- İzin Hızlı Hapı: [✋ Onay iste ˅] -->
+              <div class="agent-perm-pill-container" id="permPillWrapper">
+                <button class="agent-perm-quick-pill" type="button" id="btnPermQuickPill" title="İzinleri değiştir">
+                  <span id="permPillIcon" class="perm-pill-icon">✋</span>
+                  <span id="permPillText" class="perm-pill-text">Onay iste</span>
+                  <svg class="perm-pill-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+
+                <!-- İzin Popover'ı -->
+                <div class="agent-perm-popover agent-quick-popover--hidden" id="permQuickPopover">
+                  <div class="perm-popover-header">
+                    <span>Kraga Agent işlemleri nasıl onaylanmalı?</span>
+                    <a href="#" id="permLearnMoreLink" class="perm-popover-link">Daha fazla bilgi</a>
+                  </div>
+                  <div class="perm-popover-options">
+                    <div class="perm-option-item perm-option-item--selected" data-mode="ask_all">
+                      <div class="perm-option-icon">✋</div>
+                      <div class="perm-option-body">
+                        <div class="perm-option-title">Onay iste</div>
+                        <div class="perm-option-desc">Harici dosyaları düzenlemeden ve interneti kullanmadan önce her zaman sor</div>
+                      </div>
+                      <div class="perm-option-check">✓</div>
+                    </div>
+                    <div class="perm-option-item" data-mode="ask_critical">
+                      <div class="perm-option-icon">&gt;_</div>
+                      <div class="perm-option-body">
+                        <div class="perm-option-title">Benim için onayla</div>
+                        <div class="perm-option-desc">Yalnızca potansiyel olarak güvenli olmadığı algılanan işlemler için sor</div>
+                      </div>
+                      <div class="perm-option-check">✓</div>
+                    </div>
+                    <div class="perm-option-item" data-mode="auto">
+                      <div class="perm-option-icon">⚡</div>
+                      <div class="perm-option-body">
+                        <div class="perm-option-title">Tam Otonom (YOLO)</div>
+                        <div class="perm-option-desc">Tüm işlemleri otomatik onayla ve en hızlı şekilde uygula</div>
+                      </div>
+                      <div class="perm-option-check">✓</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="agent-input-tools-right">
+              <!-- Model & Efor Seçici Mount Noktası (Input İçinde!) -->
+              <div class="agent-model-mount-box" id="agentModelMount"></div>
+
+              <!-- Mikrofon / Ses Butonu -->
+              <button id="btnVoiceInput" class="agent-voice-input-btn" type="button" title="Sesli Giriş (Dikte)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              </button>
+
+              <!-- Durdur Butonu -->
+              <button id="btnStopPrompt" class="btn-stop-agent" style="display: none;" title="Durdur (Esc)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+              </button>
+
+              <!-- Gönder Butonu (Dairesel Mavi, Beyaz Ok) -->
+              <button id="btnSendPrompt" class="btn-send-circular" title="Gönder (Enter)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input Kartının Alt Barı (Aksiyon Hapları ve Durum Çipleri) -->
+        <div class="agent-input-footer-bar" id="agentInputFooterBar">
+          <!-- Sol: Hızlı Aksiyon Hapları -->
+          <div class="agent-quick-shelf" id="agentQuickShelf">
+            <!-- [📁 Proje seç ˅] -->
+            <div class="quick-shelf-pill-wrapper" id="projectPickerWrapper">
+              <button class="agent-shelf-pill" id="btnProjectPickerPill" type="button" title="Proje Seç veya Aç">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                <span id="projectPickerLabel">Proje seç</span>
+                <svg class="shelf-pill-arrow" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <!-- Proje Seç Popover'ı -->
+              <div class="agent-shelf-popover agent-quick-popover--hidden" id="projectPickerPopover">
+                <div class="shelf-popover-search">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="text" id="projectSearchInput" placeholder="Proje ara...">
+                </div>
+                <div class="shelf-popover-list" id="recentProjectsList">
+                  <div class="shelf-empty-hint">Proje bulunamadı</div>
+                </div>
+                <div class="shelf-popover-footer">
+                  <button type="button" id="btnNewProjectAction" class="shelf-action-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>Yeni proje / Klasör Aç</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- [🧩 Eklentiler ˅] -->
+            <div class="quick-shelf-pill-wrapper" id="toolsPickerWrapper">
+              <button class="agent-shelf-pill" id="btnToolsPickerPill" type="button" title="Geliştirici Araçları ve Eklentiler (MCP)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                <span>Eklentiler</span>
+                <svg class="shelf-pill-arrow" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <!-- Eklentiler Popover'ı -->
+              <div class="agent-shelf-popover agent-quick-popover--hidden" id="toolsPickerPopover">
+                <div class="shelf-popover-search">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="text" id="toolSearchInput" placeholder="Eklenti ara...">
+                </div>
+                <div class="shelf-popover-list shelf-popover-list--tools" id="toolsListContainer">
+                  <!-- Eklenti öğeleri AgentPanel tarafından dinamik doldurulur -->
+                </div>
+                <div class="shelf-popover-footer">
+                  <button type="button" id="btnConnectMcpAction" class="shelf-action-btn shelf-action-btn--hub">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                    <span>Eklentileri bağla (MCP Hub)</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sağ: Telemetri ve Durum Göstergeleri -->
+          <div class="agent-input-status-row" id="agentInputStatusRow">
+            <div class="agent-input-status-item agent-input-status-item--quota" id="agentQuotaStatus" title="Kalan Promo / Token Bakiyesi (Tıkla ve İncele)">
+              <span class="agent-quota-dot" id="agentQuotaDot"></span>
+              <span id="agentQuotaStatusText">Bakiye</span>
+            </div>
+            <div class="agent-input-status-item agent-input-status-item--estimator" id="agentPromptEstimator" title="Tahmini Girdi Token ve Model Çarpanı">
+              <span id="agentPromptEstimatorText">~0 tk · 1.0x</span>
+            </div>
+            <div class="agent-input-status-item agent-input-status-item--spinner" id="agentActivityStatus" style="display: none;">
+              <span class="ag-working-spinner"></span>
+              <span>Çalışıyor...</span>
+            </div>
+            <!-- Görünmez referanslar (JavaScript uyumluluğu için) -->
+            <span id="agentWorkspaceStatus" style="display: none;"><span id="agentWorkspaceStatusText">Local</span></span>
+            <span id="agentPermStatus" style="display: none;"><span id="agentPermStatusText">Dengeli</span></span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- 5. Alt Durum Çubuğu (Status Bar - 22px) -->
+  <footer class="status-bar" id="statusBarFooter"></footer>
+
+  <!-- Zen Modu Çıkış Butonu (Sadece Zen modunda görünür) -->
+  <button id="zenModeExitBtn" class="zen-mode-exit-pill" title="Zen Modundan Çık (Esc veya Ctrl+K Z)">
+    <span>Zen Modu</span>
+    <span class="zen-exit-kbd">Esc</span>
+  </button>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
