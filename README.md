@@ -1,13 +1,13 @@
 # Open Crow
 
-AI destekli masaüstü kodlama asistanı. Kendi API anahtarınla çalışır; hesap, giriş ya da sunucu gerektirmez.
+Sohbet tabanlı masaüstü asistanı. Kendi API anahtarınla çalışır; hesap, giriş ya da sunucu gerektirmez.
 
 ## Özellikler
 
-- Monaco tabanlı kod editörü, dosya ağacı, terminal
-- Sohbet tabanlı ajan: dosya okuma/yazma, arama, MCP araçları, alt ajanlar
-- OpenAI uyumlu sağlayıcılar ve Anthropic ile çalışır
-- Anahtar yalnızca bu bilgisayarda saklanır
+- Sade sohbet arayüzü: sol kenarda oturum listesi, ortada yanıt akışı, altta yazı alanı
+- Yanıtlar akarak gelir, kod blokları kopyalama düğmesiyle gösterilir
+- OpenAI uyumlu herhangi bir sağlayıcıyla çalışır (adres + anahtar)
+- Oturumlar ve anahtar yalnızca bu bilgisayarda saklanır
 
 ## Kurulum
 
@@ -20,7 +20,7 @@ npm run dist:win   # Windows kurulum dosyası
 
 ## Sağlayıcı ayarı
 
-Uygulamayı açtıktan sonra Ayarlar > API bölümünden bir API adresi (örneğin `https://api.openai.com/v1`) ve anahtarını gir. Model listesi bu adresten çekilir.
+Uygulamayı açtıktan sonra Ayarlar bölümünden bir API adresi (örneğin `https://api.openai.com/v1`) ve anahtarını gir. Model listesi bu adresten çekilir.
 
 ## Lisans
 
