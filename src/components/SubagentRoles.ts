@@ -1,5 +1,5 @@
 // src/components/SubagentRoles.ts
-// Kraga IDE v2.7 — Yerlesik Subagent Rol Tanimlari
+// Open Crow v2.7 — Yerlesik Subagent Rol Tanimlari
 
 export interface SubagentRoleDefinition {
   id: string;

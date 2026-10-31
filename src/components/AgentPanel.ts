@@ -1,5 +1,5 @@
 // src/components/AgentPanel.ts
-// Kraga IDE v2.5 AI Agent Paneli
+// Open Crow v2.5 AI Agent Paneli
 // - Otonom Araç Çağırma Döngüsü (Autonomous Tool Calling Loop & Multi-Turn Reasoning)
 // - Etkileşimli Slash Komutları Popover'ı (/compact, /clear, /council, /security, /refactor, /test, /debug, /plan, /act, /skills, /mcp, /help)
 // - Otomatik ve Manuel Bağlam Sıkıştırma (Auto-Compact Engine)
@@ -1266,7 +1266,7 @@ Bu oturumdaki önceki ${olderMessages.length} mesaj bağlam penceresini rahatlat
     const skills: Skill[] = this.skillsHub.getAllSkills();
     const enabledCount = skills.filter((s: Skill) => s.enabled).length;
 
-    let html = `### Kraga Skills Hub (14 Geliştirici Yeteneği)\n`;
+    let html = `### Yetenek Merkezi (14 Geliştirici Yeteneği)\n`;
     html += `**Aktif Yetenek Sayısı:** ${enabledCount} / ${skills.length}\n\n`;
     html += `| Yetenek Adı | Kategori | Durum | Tetikleyiciler |\n`;
     html += `| :--- | :--- | :---: | :--- |\n`;
@@ -1307,7 +1307,7 @@ Bu oturumdaki önceki ${olderMessages.length} mesaj bağlam penceresini rahatlat
   }
 
   private renderHelpInChat(): void {
-    const helpMarkdown = `### Kraga IDE v1.9.0 Komut & Kısayol Kılavuzu
+    const helpMarkdown = `### Open Crow v1.9.0 Komut & Kısayol Kılavuzu
 
 #### Slash Komutları (\`/\`):
 - \`/compact\`: Konuşma geçmişini özetler ve bağlam penceresini boşaltır.
@@ -1318,7 +1318,7 @@ Bu oturumdaki önceki ${olderMessages.length} mesaj bağlam penceresini rahatlat
 - \`/skills\`: 100 seçkin Claude & Antigravity geliştirici yeteneğinin durumunu listeler.
 - \`/mcp\`: 68 hazır MCP sunucusunu ve kullanılabilir araçları listeler.
 - \`/shortcuts\`: Klavye kısayolları ve komut rehberi modalini açar.
-- \`/about\`: Kraga IDE sürüm, sistem ve mimari bilgilerini görüntüler.
+- \`/about\`: Open Crow sürüm, sistem ve mimari bilgilerini görüntüler.
 - \`/help\`: Bu kılavuzu görüntüler.
 
 #### Hızlı Terminal & Araç Kısayolları:
@@ -1701,7 +1701,7 @@ ${mcpToolsDesc}`;
 - Açık Proje Dizini: ${projectPath}
 
 KRİTİK OTONOM ÇALIŞMA VE YEREL ARAÇ KURALI:
-1. Sen kullanıcının yerel Windows/macOS/Linux bilgisayarında çalışan Kraga IDE'nin otonom asistanısın.
+1. Sen kullanıcının yerel Windows/macOS/Linux bilgisayarında çalışan Open Crow'nin otonom asistanısın.
 2. Yerel dosya sistemi ve terminal üzerinde TAM YETKİN vardır. "Ben buluttayım, senin bilgisayarına bağlanamam, dosyaları doğrudan işleyemem, kendin .bat oluşturup çalıştır" şeklinde yanıt vermek KESİNLİKLE YASAKTIR.
 3. Excel / Veri / Tablo Görevleri (ChatGPT Canvas Seviyesi Canlı Elektronik Tablo):
    - KESİNLİKLE YASAKTIR: Kullanıcı bir Excel, tablo, hesap tablosu, CSV veya veri/EBA listesi istediğinde ASLA Python betiği (openpyxl, pandas) yazıp "terminalden çalıştırın", "pip install yapın" DEME! Kullanıcıya kod çalıştırtmak YASAKTIR.
@@ -1746,7 +1746,7 @@ KRİTİK OTONOM ÇALIŞMA VE YEREL ARAÇ KURALI:
   }
 }
 \`\`\`
-Kraga IDE bu aracı yerel işletim sisteminde çalıştıracak ve dosyayı kullanıcının bilgisayarına gerçek olarak kaydedecektir.`;
+Open Crow bu aracı yerel işletim sisteminde çalıştıracak ve dosyayı kullanıcının bilgisayarına gerçek olarak kaydedecektir.`;
 
     const thinkingInstruction = this.isThinking
       ? 'Dusuncelerini, mimari analizini ve adim adim muhakeme surecini MUTLAKA <think>...</think> etiketleri icerisine yaz. Kullaniciya iletilecek nihai dogrudan yaniti veya kodlari bu etiketin disina koy.'
@@ -1754,7 +1754,7 @@ Kraga IDE bu aracı yerel işletim sisteminde çalıştıracak ve dosyayı kulla
 
     return {
       role: 'system',
-      content: `Sen Kraga IDE icindeki akilli yazilim mimari ve otonom kodlama asistanisin.
+      content: `Sen Open Crow icindeki akilli yazilim mimari ve otonom kodlama asistanisin.
 Mevcut acik proje dizini: ${this.currentProjectPath || 'Henuz proje klasoru acilmadi'}.
 Teknik, dogrudan ve yuksek sinyalli yanitlar ver. Kod bloklarini dogru dil etiketiyle (ts, js, html, css, json vb.) yaz.
 ${thinkingInstruction}${localEnvInstruction}${modeInstruction}${planHint}${toolsInstruction}${memoryPrompt}${skillsPrompt}`,
@@ -3117,7 +3117,7 @@ ${thinkingInstruction}${localEnvInstruction}${modeInstruction}${planHint}${tools
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                   <span>Klasörde Göster</span>
                 </button>
-                <button class="agent-file-btn agent-file-btn--open" data-action="open-file" data-path="${encodeURIComponent(targetPath)}" title="Kraga IDE Editöründe Aç">
+                <button class="agent-file-btn agent-file-btn--open" data-action="open-file" data-path="${encodeURIComponent(targetPath)}" title="Open Crow Editöründe Aç">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   <span>Editörde Aç</span>
                 </button>
@@ -4911,7 +4911,7 @@ ${thinkingInstruction}${localEnvInstruction}${modeInstruction}${planHint}${tools
       { id: 'browser', icon: '', name: 'Browser', desc: 'Web tarayıcısı ve internet araştırması', prompt: '/web ' },
       { id: 'terminal', icon: '', name: 'Terminal', desc: 'Konsol ve kabuk komutları', prompt: '$ ' },
       { id: 'git', icon: '', name: 'Git', desc: 'Sürüm kontrolü ve commit geçmişi', prompt: '$ git status' },
-      { id: 'memory', icon: '', name: 'Hafıza', desc: 'Kraga Vault & İkinci Beyin Notları', prompt: '/memory ' },
+      { id: 'memory', icon: '', name: 'Hafıza', desc: 'Hafıza notları', prompt: '/memory ' },
     ];
 
     const renderToolsList = (filterText = '') => {
@@ -6040,7 +6040,7 @@ ${thinkingInstruction}${localEnvInstruction}${modeInstruction}${planHint}${tools
       window.dispatchEvent(new CustomEvent('kraga:open-account'));
 
       notificationManager.showToast({
-        title: 'Kraga Yükseltme & Paketler',
+        title: 'Paketler',
         message: 'Resmi paket satın alma sayfası açıldı. Kodunuzu doğrudan Hesap Merkezinde tanımlayabilirsiniz.',
         type: 'info',
         durationMs: 4000,

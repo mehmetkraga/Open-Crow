@@ -1,5 +1,5 @@
 // src/components/ReviewWorkspace.ts
-// Kraga IDE — Antigravity & Cursor Tarzı "Agent Edits Review & Commit" Çalışma Alanı
+// Open Crow — Antigravity & Cursor Tarzı "Agent Edits Review & Commit" Çalışma Alanı
 // Ajanın bir turda değiştirdiği tüm dosyaları alt alta katlanabilir renkli farklarla gösterir,
 // sağ tarafta "Agent Edits" gezgini ve üstte tek tıkla onaylama/Commit butonları sunar.
 

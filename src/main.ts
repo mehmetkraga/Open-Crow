@@ -1,5 +1,5 @@
 // src/main.ts
-// Kraga IDE v2.0 — Ana Orkestrasyon ve Yaşam Döngüsü
+// Open Crow v2.0 — Ana Orkestrasyon ve Yaşam Döngüsü
 
 import { EditorManager } from './components/Editor';
 import { TerminalManager } from './components/Terminal';
@@ -780,7 +780,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
 
-    // 4. Kraga Agent ile Başla
+    // 4. Open Crow Agent ile Başla
     onStartAgent: (promptHint?: string) => {
       const input = document.getElementById('agentPromptInput') as HTMLTextAreaElement;
       if (input) {
@@ -998,7 +998,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { label: 'Sorun & Hata Bildir (GitHub Issues)', action: () => openExternalUrl('https://github.com/mehmetkraga/KRAGA-AI-IDE/issues') },
         { separator: true, label: '' },
         { label: 'Güncellemeleri Denetle...', action: () => settingsModal.open('updates') },
-        { label: 'Kraga IDE Hakkında', shortcut: 'F1', action: () => settingsModal.open('about') }
+        { label: 'Open Crow Hakkında', shortcut: 'F1', action: () => settingsModal.open('about') }
       ]
     }
   ]);
@@ -1011,7 +1011,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Global Klavye Kısayolları
   window.addEventListener('keydown', async (e) => {
-    // F1: Kraga IDE Hakkında
+    // F1: Open Crow Hakkında
     if (e.key === 'F1') {
       e.preventDefault();
       settingsModal.open('about');

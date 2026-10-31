@@ -1,5 +1,5 @@
 // src/components/CodeDiagnosticsEngine.ts
-// Kraga IDE v2.5 — Visual Studio Düzeyinde Canlı Çoklu Dil Kod Teşhis & Hata Motoru (Linter & Diagnostics)
+// Open Crow v2.5 — Visual Studio Düzeyinde Canlı Çoklu Dil Kod Teşhis & Hata Motoru (Linter & Diagnostics)
 // HTML, JavaScript/TypeScript, CSS, JSON ve Python dosyalarında gerçek zamanlı sözdizimi,
 // eşleşmeyen parantez/etiket, eksik iki nokta, tırnak ve girinti hatalarını tespit edip
 // Monaco editöründe kırmızı/sarı dalgalı çizgiler (squigglies), fare üzerine gelince ipucu (tooltip)

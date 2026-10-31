@@ -997,7 +997,7 @@ export class ModelSelectorManager {
       <div class="kraga-switch-model-modal" role="dialog" aria-modal="true">
         <div class="kraga-switch-model-title">Switch model?</div>
         <div class="kraga-switch-model-desc">
-          This session is cached for <strong>${oldModelName}</strong>. Switching to <strong>${newModelName}</strong> means Kraga AI re-reads the whole session on your next message, which uses more of your limit.
+          This session is cached for <strong>${oldModelName}</strong>. Switching to <strong>${newModelName}</strong> means Open Crow AI re-reads the whole session on your next message, which uses more of your limit.
           <br><br>
           <span style="font-size: 12px; color: var(--text-muted, #8b949e);">
             (Bu oturum <strong>${oldModelName}</strong> için önbelleğe alındı. <strong>${newModelName}</strong> modeline geçmek, bir sonraki mesajda oturumun tamamının baştan okunmasına ve kotanızın harcanmasına neden olabilir.)

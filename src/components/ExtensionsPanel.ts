@@ -1,5 +1,5 @@
 // src/components/ExtensionsPanel.ts
-// Kraga IDE v2.5 — Eklentiler (Extensions Marketplace) Paneli
+// Open Crow v2.5 — Eklentiler (Extensions Marketplace) Paneli
 
 import { iconSearch, iconStar, iconDownload } from './icons';
 import { logoGitHub, logoDocker } from './brandLogos';

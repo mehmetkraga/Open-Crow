@@ -1,5 +1,5 @@
 // src/components/ScriptPanel.ts
-// Kraga IDE — Visual Studio Tarzı Proje Script & Görev Yöneticisi (Tasks / Scripts Runner)
+// Open Crow — Visual Studio Tarzı Proje Script & Görev Yöneticisi (Tasks / Scripts Runner)
 
 import { iconTerminal, iconRefresh, iconPlay, iconCheck, iconAlertCircle } from './icons';
 

@@ -1,5 +1,5 @@
 // src/components/WelcomeTab.ts
-// Kraga IDE v2.0 — Cyberpunk Başlangıç & Hoş Geldiniz Ekranı (VS Code Insiders Üstü Deneyim)
+// Open Crow v2.0 — Cyberpunk Başlangıç & Hoş Geldiniz Ekranı (VS Code Insiders Üstü Deneyim)
 
 import {
   iconFolder, iconFilePlus, iconGitBranch, iconBrain,
@@ -50,7 +50,7 @@ export class WelcomeTabManager {
             ${iconClose(16)}
           </button>
           <div class="welcome-hero-branding">
-            <img src="${initialLogo}" id="welcomeLogoImg" alt="Kraga IDE" class="welcome-neon-logo">
+            <img src="${initialLogo}" id="welcomeLogoImg" alt="Open Crow" class="welcome-neon-logo">
             <span class="welcome-version-badge">v1.9.0 • Belgeler, Arama & Çoklu Araç</span>
           </div>
           <p class="welcome-tagline">
@@ -96,7 +96,7 @@ export class WelcomeTabManager {
               <button class="welcome-action-btn welcome-action-btn--agent" id="btnWelcomeStartAgent">
                 ${iconBrain(18)}
                 <div class="welcome-action-btn__text">
-                  <span class="btn-main-label">Kraga Agent İle Başla</span>
+                  <span class="btn-main-label">Open Crow Agent İle Başla</span>
                   <span class="btn-sub-label">Yapay zekaya yeni bir proje tarif et</span>
                 </div>
                 <kbd>Act / Plan</kbd>
@@ -159,7 +159,7 @@ export class WelcomeTabManager {
           <!-- Kolon 3: Kraga Zekası (Walkthrough & Superpowers) -->
           <div class="welcome-card welcome-card--features">
             <h3 class="welcome-card__title">
-              <span>Kraga AI Gücü</span>
+              <span>Open Crow AI Gücü</span>
             </h3>
             <div class="welcome-features-list">
               <div class="feature-badge-box">

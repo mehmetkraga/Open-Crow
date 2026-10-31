@@ -1,5 +1,5 @@
 // src/core/NotificationManager.ts
-// Kraga IDE — Bildirimler & Ses Motoru (Response Completions, In-App Cyber Toasts, Web Audio Chime & Desktop Notifications)
+// Open Crow — Bildirimler & Ses Motoru (Response Completions, In-App Cyber Toasts, Web Audio Chime & Desktop Notifications)
 
 import { iconAlertTriangle, iconClose, iconZap, iconGift } from '../components/icons';
 
@@ -121,7 +121,7 @@ export class NotificationManager {
   }
 
   /**
-   * Kraga IDE fütüristik dahili bildirim kartı (Toast) gösterir.
+   * Open Crow fütüristik dahili bildirim kartı (Toast) gösterir.
    */
   public showToast(options: ToastOptions): void {
     const { title, message, type = 'info', durationMs = 5000, action } = options;
@@ -265,7 +265,7 @@ export class NotificationManager {
       if (notifyOnResponse) {
         const isFocused = document.hasFocus();
         if (!isFocused) {
-          await this.sendDesktopNotification('Kraga AI', `Görevi tamamladı: ${taskTitle}`);
+          await this.sendDesktopNotification('Open Crow AI', `Görevi tamamladı: ${taskTitle}`);
         }
       }
     } catch (e) {
@@ -278,7 +278,7 @@ export class NotificationManager {
    */
   public async testNotification(): Promise<void> {
     this.playChime();
-    await this.sendDesktopNotification('Kraga IDE • Bildirim Testi', 'Sesli ve görsel yanıt bildirimleri başarıyla çalışıyor!');
+    await this.sendDesktopNotification('Open Crow • Bildirim Testi', 'Sesli ve görsel yanıt bildirimleri başarıyla çalışıyor!');
   }
 }
 

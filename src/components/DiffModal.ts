@@ -1,5 +1,5 @@
 // src/components/DiffModal.ts
-// Kraga IDE — Visual Studio 2022 Yan Yana Görsel Kod Karşılaştırma Modalı (Side-by-Side Diff Modal)
+// Open Crow — Visual Studio 2022 Yan Yana Görsel Kod Karşılaştırma Modalı (Side-by-Side Diff Modal)
 // Monaco Diff Editor (createDiffEditor) kullanarak orijinal ve yeni kodu yan yana,
 // satır satır kırmızı/yeşil diff renklendirmesiyle sunar ve tek tıkla dosyaya uygular.
 

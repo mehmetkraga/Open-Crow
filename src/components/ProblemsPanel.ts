@@ -1,5 +1,5 @@
 // src/components/ProblemsPanel.ts
-// Kraga IDE — Visual Studio 2022 Tarzı Hata Listesi & Tanı Tablosu (Visual Studio Error List & Diagnostics Grid)
+// Open Crow — Visual Studio 2022 Tarzı Hata Listesi & Tanı Tablosu (Visual Studio Error List & Diagnostics Grid)
 // Hata, Uyarı ve İleti filtreleme, Kapsam seçici (Tüm Çözüm vs. Geçerli Belge),
 // ve tıklandığında ilgili satıra anında atlayan tam donanımlı profesyonel veri tablosu.
 

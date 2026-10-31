@@ -1,5 +1,5 @@
 // src/components/LiveScriptWorkspace.ts
-// Kraga IDE — Antigravity & Claude Tarzı Canlı Script ve Kod Çalışma Alanı (Live Artifact Workspace)
+// Open Crow — Antigravity & Claude Tarzı Canlı Script ve Kod Çalışma Alanı (Live Artifact Workspace)
 // - Ajan kod yazarken sol ana viewport'ta otomatik açılır
 // - Monaco Editor entegrasyonu ile canlı streaming kod yazımı
 // - Web Önizleme (Three.js, Canvas, HTML5 Demoları için yerleşik Live iframe Runner)

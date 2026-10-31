@@ -1,5 +1,5 @@
 // src/components/AppMenuBar.ts
-// Kraga IDE v2.0 — Masaüstü Uygulama Menü Çubuğu (Dosya, Düzen, Görünüm, Terminal, Agent, Yardım)
+// Open Crow v2.0 — Masaüstü Uygulama Menü Çubuğu (Dosya, Düzen, Görünüm, Terminal, Agent, Yardım)
 
 export interface MenuItem {
   label: string;

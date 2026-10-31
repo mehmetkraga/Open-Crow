@@ -1,5 +1,5 @@
 // src/components/PreviewModal.ts
-// Kraga IDE — İnteraktif Canlı Önizleme Popup / Modal Penceresi (Live Game & Web Preview Modal)
+// Open Crow — İnteraktif Canlı Önizleme Popup / Modal Penceresi (Live Game & Web Preview Modal)
 // HTML Oyunları (yılan oyunu vb.), Web Siteleri ve Uygulamaları için bağımsız açılır pencere.
 // Monaco Editör görünümünü bozmadan, tam odaklı oyun ve canlı test deneyimi sunar.
 

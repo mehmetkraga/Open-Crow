@@ -1,5 +1,5 @@
 // src/components/SourceControlPanel.ts
-// Kraga IDE v2.5 — Kaynak Kontrolü & Git Paneli (VS Code Tarzı)
+// Open Crow v2.5 — Kaynak Kontrolü & Git Paneli (VS Code Tarzı)
 
 import {
   iconGitBranch, iconRefresh, iconCheck, iconPlus, iconTrash,

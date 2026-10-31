@@ -232,11 +232,11 @@ export class StatusBarManager {
     if (!activityText || activityText === 'Hazır' || activityText === 'Tamamlandı') {
       this.elements.aiStatus.className = 'status-bar__item status-bar__item--clickable status-bar__item--success';
       this.elements.aiStatus.innerHTML = `${kragaBirdImg(14)} <span>Hazır</span>`;
-      this.elements.aiStatus.title = 'Kraga AI Asistanı Hazır';
+      this.elements.aiStatus.title = 'Open Crow AI Asistanı Hazır';
     } else {
       this.elements.aiStatus.className = 'status-bar__item status-bar__item--clickable status-bar__item--running';
       this.elements.aiStatus.innerHTML = `${kragaBirdImg(14)} <span class="status-bar-ai-pulse"></span> <span class="status-bar-ai-text">${activityText}</span>`;
-      this.elements.aiStatus.title = `Kraga AI: ${activityText}`;
+      this.elements.aiStatus.title = `Open Crow AI: ${activityText}`;
     }
   }
 

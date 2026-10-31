@@ -1,4 +1,4 @@
-// Kraga IDE — Ajan için çalışma alanı arama araçları (grep / glob) ve web okuma.
+// Open Crow — Ajan için çalışma alanı arama araçları (grep / glob) ve web okuma.
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import dns from 'node:dns/promises';

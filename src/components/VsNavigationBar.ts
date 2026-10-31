@@ -1,5 +1,5 @@
 // src/components/VsNavigationBar.ts
-// Kraga IDE — Visual Studio 2022 Sınıf ve Üye Gezinti Çubuğu (Class & Member Navigation Bar)
+// Open Crow — Visual Studio 2022 Sınıf ve Üye Gezinti Çubuğu (Class & Member Navigation Bar)
 // Editörün üstünde yer alan ve aktif dosyadaki sınıfları/tipleri ve metotları/fonksiyonları dinamik listeleyen bar
 
 export interface VsSymbol {

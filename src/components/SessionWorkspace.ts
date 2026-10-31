@@ -1,5 +1,5 @@
 // src/components/SessionWorkspace.ts
-// Kraga IDE — Merkezi Sohbet Oturumları ve Geçmiş Çalışma Alanı (Session Workspace Panel)
+// Open Crow — Merkezi Sohbet Oturumları ve Geçmiş Çalışma Alanı (Session Workspace Panel)
 // Hoş Geldiniz ekranı gibi ana merkez viewport'ta açılır.
 
 import DOMPurify from 'dompurify';
@@ -164,7 +164,7 @@ export class SessionWorkspaceManager {
                 </svg>
               </div>
               <h3>Henüz kayıtlı bir sohbet yok</h3>
-              <p>Kraga Agent ile başlattığınız tüm konuşmalar otomatik olarak buraya kaydedilir.</p>
+              <p>Open Crow Agent ile başlattığınız tüm konuşmalar otomatik olarak buraya kaydedilir.</p>
               <button class="session-ws-btn session-ws-btn--new" id="btnSessionWsNewEmpty">
                 Yeni Sohbet Başlat
               </button>
@@ -203,7 +203,7 @@ export class SessionWorkspaceManager {
     const date = new Date(s.updatedAt);
     const dateStr = `${date.toLocaleDateString('tr-TR')} ${date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
     const msgCount = s.messageCount || s.messages?.length || 0;
-    const modelName = s.model ? s.model.replace('claude-', '').replace('gpt-', 'GPT-') : 'Kraga Agent';
+    const modelName = s.model ? s.model.replace('claude-', '').replace('gpt-', 'GPT-') : 'Open Crow Agent';
 
     return `
       <div class="session-card ${s.isPinned ? 'session-card--pinned' : ''}" data-id="${s.id}">

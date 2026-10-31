@@ -1,5 +1,5 @@
 // src/components/AuxiliaryPane.ts
-// Kraga IDE — Antigravity Tarzı Auxiliary Pane (Oturum Bağlamı & Varlıklar Paneli)
+// Open Crow — Antigravity Tarzı Auxiliary Pane (Oturum Bağlamı & Varlıklar Paneli)
 // Subagents, Files Changed, Artifacts ve Uploads akordeonları
 
 import DOMPurify from 'dompurify';

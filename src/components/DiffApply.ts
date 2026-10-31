@@ -1,5 +1,5 @@
 // src/components/DiffApply.ts
-// Kraga AI Kod Blokları Yönetimi (Editörde Açma, Dosyaya Kaydetme & Diff Uygulama)
+// Open Crow AI Kod Blokları Yönetimi (Editörde Açma, Dosyaya Kaydetme & Diff Uygulama)
 
 import { iconCopy, iconFileEdit, iconFilePlus, iconCheck, iconClose, iconExternalLink, iconFolder } from './icons';
 import { DiffModalManager } from './DiffModal';

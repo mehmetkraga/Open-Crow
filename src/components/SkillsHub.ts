@@ -1,5 +1,5 @@
 // src/components/SkillsHub.ts
-// Kraga Skills Hub — Zengin Yerleşik ve Özel Yetenek Yöneticisi (100 Seçkin Claude & Antigravity Yeteneği)
+// Yetenek Merkezi — Zengin Yerleşik ve Özel Yetenek Yöneticisi (100 Seçkin Claude & Antigravity Yeteneği)
 
 import { iconPuzzle, iconPlus, iconTrash } from './icons';
 

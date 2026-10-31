@@ -1,5 +1,5 @@
 // electron/services/updateManager.ts
-// Kraga IDE — Yerleşik Otomatik Güncelleme Motoru (In-App Auto-Updater)
+// Open Crow — Yerleşik Otomatik Güncelleme Motoru (In-App Auto-Updater)
 // - GitHub Releases API (mehmetkraga/KRAGA-AI-IDE-RELEASES) entegrasyonu
 // - Arka planda akışlı installer (.exe) indirme & ilerleme yüzdesi (Progress Bar)
 // - Saatlik periyodik otomatik kontrol & masaüstü/uygulama içi bildirim köprüsü
@@ -397,14 +397,14 @@ export class UpdateManager {
       const cmdScript = `@echo off
 chcp 65001 >nul
 timeout /t 2 /nobreak >nul
-taskkill /f /im "Kraga IDE.exe" >nul 2>&1
+taskkill /f /im "Open Crow.exe" >nul 2>&1
 timeout /t 1 /nobreak >nul
 start "" /wait "${escapedInstaller}" /S --updated --force-run
 if errorlevel 1 (
   start "" /wait "${escapedInstaller}" /S
 )
 timeout /t 2 /nobreak >nul
-tasklist /fi "imagename eq Kraga IDE.exe" 2>nul | find /i "Kraga IDE.exe" >nul
+tasklist /fi "imagename eq Open Crow.exe" 2>nul | find /i "Open Crow.exe" >nul
 if errorlevel 1 (
   if exist "${escapedExec}" (
     start "" "${escapedExec}"

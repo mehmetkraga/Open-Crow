@@ -1,5 +1,5 @@
 // src/core/spreadsheetAgentTools.ts
-// Kraga IDE — Otonom AI Elektronik Tablo (Excel / CSV) Motoru ve Araçları
+// Open Crow — Otonom AI Elektronik Tablo (Excel / CSV) Motoru ve Araçları
 // Agent için yerleşik, zero-dependency SheetJS (xlsx) tabanlı okuma, oluşturma ve canlı düzenleme altyapısı.
 
 import * as XLSX from 'xlsx';

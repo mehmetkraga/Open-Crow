@@ -1,5 +1,5 @@
 // src/components/SpreadsheetWorkspace.ts
-// Kraga IDE — Yerleşik İnteraktif Excel / Spreadsheet Çalışma Alanı (.xlsx, .xls, .csv, .tsv)
+// Open Crow — Yerleşik İnteraktif Excel / Spreadsheet Çalışma Alanı (.xlsx, .xls, .csv, .tsv)
 // ChatGPT Canvas ve Claude Artifacts tarzı canlı elektronik tablo çalışma alanı.
 // Çoklu çalışma sayfası seçimi, [✨ Düzenleme İste] otonom AI yönlendirme popover'ı,
 // canlı formül çubuğu (fx), yakınlaştırma (%50-%200), dışa aktarma ve parıldayan hücre animasyonları.
@@ -166,7 +166,7 @@ export class SpreadsheetWorkspace {
         this.pulseHighlightCells(highlightCells);
       }
 
-      this.showToast(`✨ Kraga AI: Tablo canlı olarak güncellendi (${highlightCells?.length || 0} hücre)`);
+      this.showToast(`✨ Open Crow AI: Tablo canlı olarak güncellendi (${highlightCells?.length || 0} hücre)`);
     } catch (err: any) {
       console.error('[SpreadsheetWorkspace] reloadFromDisk hatası:', err);
     }
@@ -279,7 +279,7 @@ export class SpreadsheetWorkspace {
             </div>
 
             <!-- ✨ DÜZENLEME İSTE BUTONU (ChatGPT Canvas & Claude Artifacts 1:1) -->
-            <button type="button" class="kraga-sheet-btn kraga-sheet-btn--ai" id="btnRequestAiEdit" title="Kraga AI'dan bu tabloyu düzenlemesini, formül yazmasını veya satır eklemesini iste">
+            <button type="button" class="kraga-sheet-btn kraga-sheet-btn--ai" id="btnRequestAiEdit" title="Open Crow AI'dan bu tabloyu düzenlemesini, formül yazmasını veya satır eklemesini iste">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
               </svg>
@@ -308,7 +308,7 @@ export class SpreadsheetWorkspace {
 
           <div class="kraga-sheet-toolbar__right">
             <!-- AI Sohbet Panelini Yan Yana Aç / Kapat Toggle -->
-            <button type="button" class="kraga-sheet-icon-btn-action" id="btnToggleAgentChat" title="Kraga AI Sohbet Panelini Aç / Odakla (Split-View)">
+            <button type="button" class="kraga-sheet-icon-btn-action" id="btnToggleAgentChat" title="Open Crow AI Sohbet Panelini Aç / Odakla (Split-View)">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
@@ -383,7 +383,7 @@ export class SpreadsheetWorkspace {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2">
                 <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
               </svg>
-              <span>Kraga AI ile Canlı Tablo Düzenleme</span>
+              <span>Open Crow AI ile Canlı Tablo Düzenleme</span>
             </div>
             <button type="button" class="kraga-sheet-ai-close" id="btnCloseAiPopover" title="Kapat">✕</button>
           </div>
@@ -726,15 +726,15 @@ export class SpreadsheetWorkspace {
         prompt: promptText,
       };
 
-      // Kraga Agent paneline olayı dispatch et
+      // Open Crow Agent paneline olayı dispatch et
       window.dispatchEvent(new CustomEvent('kraga:request-sheet-ai-edit', { detail }));
-      this.showToast('✨ İstek Kraga Agent paneline iletildi...');
+      this.showToast('✨ İstek Open Crow Agent paneline iletildi...');
     });
 
     // 5. AI Chat Split-View Odaklama
     this.containerEl.querySelector('#btnToggleAgentChat')?.addEventListener('click', () => {
       window.dispatchEvent(new CustomEvent('kraga:focus-agent-chat'));
-      this.showToast('💬 Kraga Agent paneli odaklandı');
+      this.showToast('💬 Open Crow Agent paneli odaklandı');
     });
 
     // 6. Sayfa Seçici Dropdown

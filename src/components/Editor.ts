@@ -1,5 +1,5 @@
 // src/components/Editor.ts
-// Kraga IDE v2.0 Monaco Editör Yöneticisi (7 Tema, Çoklu Sekme, Status Bar Köprüsü)
+// Open Crow v2.0 Monaco Editör Yöneticisi (7 Tema, Çoklu Sekme, Status Bar Köprüsü)
 
 import * as monaco from 'monaco-editor';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
@@ -537,7 +537,7 @@ export class EditorManager {
   }
 
   /**
-   * Monaco editörü sağ tık menüsüne Kraga AI yeteneklerini ekler
+   * Monaco editörü sağ tık menüsüne Open Crow AI yeteneklerini ekler
    */
   private registerAiContextMenuActions(): void {
     if (!this.editor) return;
@@ -545,7 +545,7 @@ export class EditorManager {
     // 1. Satır İçi Düzenle (Ctrl+K)
     this.editor.addAction({
       id: 'kraga.ai.inlineEdit',
-      label: 'Kraga AI: Satır İçi Düzenle (Ctrl+K)',
+      label: 'Open Crow AI: Satır İçi Düzenle (Ctrl+K)',
       keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK],
       contextMenuGroupId: '1_kraga_ai',
       contextMenuOrder: 1,
@@ -557,7 +557,7 @@ export class EditorManager {
     // 2. Seçili Kodu Açıkla
     this.editor.addAction({
       id: 'kraga.ai.explain',
-      label: 'Kraga AI: Seçili Kodu Açıkla',
+      label: 'Open Crow AI: Seçili Kodu Açıkla',
       contextMenuGroupId: '1_kraga_ai',
       contextMenuOrder: 2,
       run: (ed) => {
@@ -571,7 +571,7 @@ export class EditorManager {
     // 3. Kodu Refaktör Et
     this.editor.addAction({
       id: 'kraga.ai.refactor',
-      label: 'Kraga AI: Kodu Refaktör Et & Temizle',
+      label: 'Open Crow AI: Kodu Refaktör Et & Temizle',
       contextMenuGroupId: '1_kraga_ai',
       contextMenuOrder: 3,
       run: (ed) => {
@@ -582,7 +582,7 @@ export class EditorManager {
     // 4. Birim Test Üret
     this.editor.addAction({
       id: 'kraga.ai.test',
-      label: 'Kraga AI: Birim Test Üret (Unit Tests)',
+      label: 'Open Crow AI: Birim Test Üret (Unit Tests)',
       contextMenuGroupId: '1_kraga_ai',
       contextMenuOrder: 4,
       run: (ed) => {
@@ -596,7 +596,7 @@ export class EditorManager {
     // 5. Güvenlik ve Hata Denetimi
     this.editor.addAction({
       id: 'kraga.ai.audit',
-      label: 'Kraga AI: Güvenlik & Hata Denetimi',
+      label: 'Open Crow AI: Güvenlik & Hata Denetimi',
       contextMenuGroupId: '1_kraga_ai',
       contextMenuOrder: 5,
       run: (ed) => {
@@ -610,7 +610,7 @@ export class EditorManager {
       // 6. JSDoc & Tip Açıklamaları Ekle
       this.editor.addAction({
         id: 'kraga.ai.jsdoc',
-        label: 'Kraga AI: JSDoc & Tipleri Ekle',
+        label: 'Open Crow AI: JSDoc & Tipleri Ekle',
         contextMenuGroupId: '1_kraga_ai',
         contextMenuOrder: 6,
         run: (ed) => {
@@ -669,7 +669,7 @@ export class EditorManager {
           if (hasMarkers) {
             const firstError = context.markers[0];
             actions.push({
-              title: `💡 Kraga AI: Bu Hatayı Düzelt (${firstError.message.slice(0, 45)}...)`,
+              title: `💡 Open Crow AI: Bu Hatayı Düzelt (${firstError.message.slice(0, 45)}...)`,
               kind: 'quickfix',
               isPreferred: true,
               command: {
@@ -682,7 +682,7 @@ export class EditorManager {
 
           if (selectedText.length > 0) {
             actions.push({
-              title: '💡 Kraga AI: Kodu Refaktör Et & Sadeleştir',
+              title: '💡 Open Crow AI: Kodu Refaktör Et & Sadeleştir',
               kind: 'refactor',
               command: {
                 id: 'kraga.ai.refactorAction',
@@ -691,7 +691,7 @@ export class EditorManager {
               }
             });
             actions.push({
-              title: '💡 Kraga AI: JSDoc & Tipleri Ekle',
+              title: '💡 Open Crow AI: JSDoc & Tipleri Ekle',
               kind: 'quickfix',
               command: {
                 id: 'kraga.ai.jsdocAction',
@@ -700,7 +700,7 @@ export class EditorManager {
               }
             });
             actions.push({
-              title: '💡 Kraga AI: Birim Test Üret (Unit Test)',
+              title: '💡 Open Crow AI: Birim Test Üret (Unit Test)',
               kind: 'quickfix',
               command: {
                 id: 'kraga.ai.testAction',
@@ -719,28 +719,28 @@ export class EditorManager {
 
       this.editor?.addAction({
         id: 'kraga.ai.fixErrorAction',
-        label: 'Kraga AI: Hata Düzelt',
+        label: 'Open Crow AI: Hata Düzelt',
         run: (ed, errorMsg) => {
           InlineEditBar.getInstance().show(ed as monaco.editor.IStandaloneCodeEditor, `Bu hatayı düzelt: ${errorMsg || 'Sözdizimi hatası'}`);
         }
       });
       this.editor?.addAction({
         id: 'kraga.ai.refactorAction',
-        label: 'Kraga AI: Refaktör',
+        label: 'Open Crow AI: Refaktör',
         run: (ed) => {
           InlineEditBar.getInstance().show(ed as monaco.editor.IStandaloneCodeEditor, 'Kodu SOLID standartlarına göre temiz, okunabilir ve modern refaktör et.');
         }
       });
       this.editor?.addAction({
         id: 'kraga.ai.jsdocAction',
-        label: 'Kraga AI: JSDoc Ekle',
+        label: 'Open Crow AI: JSDoc Ekle',
         run: (ed) => {
           InlineEditBar.getInstance().show(ed as monaco.editor.IStandaloneCodeEditor, 'Açıklayıcı JSDoc ve TypeScript tip tanımlamalarını ekle.');
         }
       });
       this.editor?.addAction({
         id: 'kraga.ai.testAction',
-        label: 'Kraga AI: Test Üret',
+        label: 'Open Crow AI: Test Üret',
         run: (ed) => {
           const code = this.getSelectedOrCurrentLine(ed as monaco.editor.IStandaloneCodeEditor);
           if (code) {
@@ -1021,7 +1021,7 @@ export class EditorManager {
         const fileName = filePath.split(/[\\/]/).pop() || filePath;
         await this.openSnippet(
           fileName,
-          `// [Kraga IDE Güvenlik Kalkanı]\n// Bu dosya ikili (binary) bir formattır (${ext.toUpperCase()}).\n// Bellek performansını ve IDE kararlılığını korumak için Monaco metin editöründe açılmadı.\n// Dosyayı sistemin varsayılan uygulamasında açmak için Gezgin'de sağ tıklayıp "PC'de Aç" diyebilirsiniz.\n// Dosya Yolu: ${filePath}`,
+          `// [Open Crow Güvenlik Kalkanı]\n// Bu dosya ikili (binary) bir formattır (${ext.toUpperCase()}).\n// Bellek performansını ve IDE kararlılığını korumak için Monaco metin editöründe açılmadı.\n// Dosyayı sistemin varsayılan uygulamasında açmak için Gezgin'de sağ tıklayıp "PC'de Aç" diyebilirsiniz.\n// Dosya Yolu: ${filePath}`,
           'javascript'
         );
         return;
@@ -1035,7 +1035,7 @@ export class EditorManager {
           const fileName = filePath.split(/[\\/]/).pop() || filePath;
           await this.openSnippet(
             fileName,
-            `// [Kraga IDE Bellek Koruma Kalkanı]\n// ${readErr.message}\n// Monaco editörünün çökmesini (OOM) önlemek için dosya engellendi.`,
+            `// [Open Crow Bellek Koruma Kalkanı]\n// ${readErr.message}\n// Monaco editörünün çökmesini (OOM) önlemek için dosya engellendi.`,
             'javascript'
           );
           return;
@@ -1168,7 +1168,7 @@ export class EditorManager {
           <div class="editor-empty-state-logo-wrap">
             ${kragaBirdImg(64)}
           </div>
-          <div class="editor-empty-state-title">Kraga IDE</div>
+          <div class="editor-empty-state-title">Open Crow</div>
           <div class="editor-empty-state-desc">Kodlamaya başlamak için bir dosya açın veya gezginden seçin.</div>
           
           <div class="editor-empty-state-shortcuts">

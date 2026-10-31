@@ -1,5 +1,5 @@
 // src/components/ThemeManager.ts
-// Kraga IDE 7 Tema Yöneticisi (Monaco ve xterm Senkronizasyonu, Logo Değişimi, Emojisiz)
+// Open Crow 7 Tema Yöneticisi (Monaco ve xterm Senkronizasyonu, Logo Değişimi, Emojisiz)
 
 export interface ThemeDefinition {
   id: string;
@@ -56,7 +56,7 @@ export class ThemeManager {
       this.logoImgEl.alt = theme.name;
     }
 
-    // Başlık çubuğundaki KRAGA IDE neon yazı logosunu temaya göre güncelle
+    // Başlık çubuğundaki OPEN CROW neon yazı logosunu temaya göre güncelle
     if (this.titleLogoImgEl) {
       this.titleLogoImgEl.src = theme.titleLogo;
       this.titleLogoImgEl.alt = `${theme.name} Open Crow`;

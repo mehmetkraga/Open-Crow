@@ -1,5 +1,5 @@
 // src/components/PreviewWorkspace.ts
-// Kraga IDE — Dahili Çoklu Format Canlı Önizleme Çalışma Alanı (Live Preview Workspace Panel)
+// Open Crow — Dahili Çoklu Format Canlı Önizleme Çalışma Alanı (Live Preview Workspace Panel)
 // - HTML & Canvas Web Oyunları (örn. yilan_oyunu.html), Web Siteleri
 // - PDF Belgeleri (Dahili PDF görüntüleyici)
 // - Zengin Markdown & Mermaid önizleme

@@ -1,5 +1,5 @@
 // src/components/PlanWorkspace.ts
-// Kraga IDE — Antigravity & Cyberpunk Uygulama Planı Çalışma Alanı (Plan Workspace Panel)
+// Open Crow — Antigravity & Cyberpunk Uygulama Planı Çalışma Alanı (Plan Workspace Panel)
 // - Hoş Geldiniz ekranı gibi ana merkez çalışma alanında (editorViewport) açılır
 // - Zengin çok kolonlu kart ızgarası (Mimari Şema, Değişiklikler, Test Kontrol Listesi, Riskler)
 // - Onayla ve Uygula, Monaco'da Düzenle, Markdown Kopyala ve Kapatma aksiyonları
@@ -215,7 +215,7 @@ export class PlanWorkspaceManager {
         <footer class="plan-workspace-footer">
           <div class="plan-footer-left">
             <span class="plan-footer-tip">
-              💡 <strong>İpucu:</strong> Planı onayladığınızda Kraga Agent otomatik olarak <code>Act (Eylem)</code> moduna geçerek belirtilen dosyaları ve komutları oluşturmaya başlar.
+              💡 <strong>İpucu:</strong> Planı onayladığınızda Open Crow Agent otomatik olarak <code>Act (Eylem)</code> moduna geçerek belirtilen dosyaları ve komutları oluşturmaya başlar.
             </span>
           </div>
           <div class="plan-footer-right">

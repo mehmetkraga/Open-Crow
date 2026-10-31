@@ -1,5 +1,5 @@
 // src/components/Terminal.ts
-// Kraga IDE v2.0 Çoklu Terminal ve Tema Uyumlu xterm.js Yöneticisi
+// Open Crow v2.0 Çoklu Terminal ve Tema Uyumlu xterm.js Yöneticisi
 
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
@@ -122,7 +122,7 @@ export class TerminalManager {
     this.renderTabs();
     this.switchTerminal(instance);
 
-    term.writeln('\x1b[36mKraga IDE Terminal Hazır\x1b[0m\r\n');
+    term.writeln('\x1b[36mOpen Crow Terminal Hazır\x1b[0m\r\n');
     await window.kragaAPI.terminal.createSession(id, workingDir);
     setTimeout(() => fitAddon.fit(), 50);
     setTimeout(() => fitAddon.fit(), 200);

@@ -1,5 +1,5 @@
 // src/components/MCPSettingsPanel.ts
-// Kraga IDE v2.5 — Detaylı Model Context Protocol (MCP) Connectors Hub (Claude Desktop & Antigravity Tarzı)
+// Open Crow v2.5 — Detaylı Model Context Protocol (MCP) Connectors Hub (Claude Desktop & Antigravity Tarzı)
 
 import { MCP_CONNECTORS_CATALOG } from './mcpCatalogData';
 import type { MCPConnectorDef, MCPConfigField } from './mcpCatalogData';

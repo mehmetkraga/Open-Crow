@@ -1,5 +1,5 @@
 // src/components/SearchPanel.ts
-// Kraga IDE v2.5 — Proje Genelinde Dosya İçi Arama ve Değiştirme Paneli (VS Code Tarzı)
+// Open Crow v2.5 — Proje Genelinde Dosya İçi Arama ve Değiştirme Paneli (VS Code Tarzı)
 
 import {
   iconSearch, iconRefresh, iconClose, iconChevronRight, iconChevronDown,

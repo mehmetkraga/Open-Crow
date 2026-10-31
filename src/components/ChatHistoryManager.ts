@@ -235,7 +235,7 @@ export class ChatHistoryManager {
     md += `*Oluşturulma:* ${dateStr} | *Model:* ${session.model || 'Bilinmiyor'} | *Mesaj Sayısı:* ${session.messages.length}\n\n---\n\n`;
 
     for (const msg of session.messages) {
-      const sender = msg.role === 'user' ? 'Kullanıcı' : msg.role === 'assistant' ? 'Kraga Agent' : 'Sistem';
+      const sender = msg.role === 'user' ? 'Kullanıcı' : msg.role === 'assistant' ? 'Open Crow Agent' : 'Sistem';
       md += `### ${sender}\n\n${msg.content}\n\n---\n\n`;
     }
 

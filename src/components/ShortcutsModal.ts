@@ -1,5 +1,5 @@
 // src/components/ShortcutsModal.ts
-// Kraga IDE v1.8.6 — Klavye Kısayolları ve Komut Rehberi Modalı
+// Open Crow v1.8.6 — Klavye Kısayolları ve Komut Rehberi Modalı
 
 import { iconClose, iconSearch } from './icons';
 
@@ -36,22 +36,22 @@ export const SHORTCUTS_DATA: ShortcutItem[] = [
   { category: 'nav', categoryLabel: 'Gezinme & Görünüm', name: 'Zen Modu (Saf Odaklanma)', keys: ['F10'], description: 'Tüm panelleri gizleyerek sadece koda odaklanmayı sağlar.' },
   { category: 'nav', categoryLabel: 'Gezinme & Görünüm', name: 'Tam Ekran', keys: ['F11'], description: 'Uygulamayı tam ekran veya pencere moduna geçirir.' },
   { category: 'nav', categoryLabel: 'Gezinme & Görünüm', name: 'Ayarlar ve Tercihler', keys: ['Ctrl', ','], description: 'API, Model, MCP ve Görünüm ayarları modalini açar.' },
-  { category: 'nav', categoryLabel: 'Gezinme & Görünüm', name: 'Kraga IDE Hakkında', keys: ['F1'], description: 'Sürüm, geliştirici ve sistem mimari bilgilerini gösterir.' },
+  { category: 'nav', categoryLabel: 'Gezinme & Görünüm', name: 'Open Crow Hakkında', keys: ['F1'], description: 'Sürüm, geliştirici ve sistem mimari bilgilerini gösterir.' },
 
   // Terminal & Görevler
   { category: 'terminal', categoryLabel: 'Terminal & Görevler', name: 'Terminali Aç / Kapat', keys: ['Ctrl', '`'], description: 'Entegre terminal panelini katlar veya açar.' },
   { category: 'terminal', categoryLabel: 'Terminal & Görevler', name: 'Yeni Terminal Oturumu', keys: ['Ctrl', 'Shift', '`'], description: 'Yeni bir PowerShell / bash terminal sekmesi başlatır.' },
   { category: 'terminal', categoryLabel: 'Terminal & Görevler', name: 'Script & Görev Paneli', keys: ['Ctrl', 'Shift', 'T'], description: 'package.json scriptleri ve NPM görevlerini yönetir.' },
 
-  // Kraga AI & Ajan
-  { category: 'ai', categoryLabel: 'Kraga AI & Ajan', name: 'Yeni Ajan Oturumu', keys: ['Ctrl', 'Shift', 'N'], description: 'Agent panelinde temiz bir sohbet oturumu başlatır.' },
-  { category: 'ai', categoryLabel: 'Kraga AI & Ajan', name: 'Sohbet Geçmişi', keys: ['Ctrl', 'H'], description: 'Yerleşik sohbet oturumları çekmecesini açar.' },
-  { category: 'ai', categoryLabel: 'Kraga AI & Ajan', name: 'Bağlamı Özetle (/compact)', keys: ['/compact'], description: 'Görüşmeyi zekice özetleyerek bağlam penceresini boşaltır.' },
-  { category: 'ai', categoryLabel: 'Kraga AI & Ajan', name: 'Plan Modu (/plan)', keys: ['/plan'], description: 'Ajanı mimari ve adım adım uygulama planı moduna geçirir.' },
-  { category: 'ai', categoryLabel: 'Kraga AI & Ajan', name: 'Eylem Modu (/act)', keys: ['/act'], description: 'Ajanı doğrudan kod üretme ve dosya yazma moduna geçirir.' },
-  { category: 'ai', categoryLabel: 'Kraga AI & Ajan', name: 'Modeller Konseyi (/council)', keys: ['/council'], description: 'Andrej Karpathy 3 aşamalı kör hakemlik konseyini toplar.' },
-  { category: 'ai', categoryLabel: 'Kraga AI & Ajan', name: 'MCP Sunucuları (/mcp)', keys: ['/mcp'], description: 'Bağlı MCP sunucularını ve etkin araçları listeler.' },
-  { category: 'ai', categoryLabel: 'Kraga AI & Ajan', name: 'Geliştirici Yetenekleri (/skills)', keys: ['/skills'], description: '100 Claude ve Antigravity yeteneğinin durumunu gösterir.' }
+  // Open Crow AI & Ajan
+  { category: 'ai', categoryLabel: 'Open Crow AI & Ajan', name: 'Yeni Ajan Oturumu', keys: ['Ctrl', 'Shift', 'N'], description: 'Agent panelinde temiz bir sohbet oturumu başlatır.' },
+  { category: 'ai', categoryLabel: 'Open Crow AI & Ajan', name: 'Sohbet Geçmişi', keys: ['Ctrl', 'H'], description: 'Yerleşik sohbet oturumları çekmecesini açar.' },
+  { category: 'ai', categoryLabel: 'Open Crow AI & Ajan', name: 'Bağlamı Özetle (/compact)', keys: ['/compact'], description: 'Görüşmeyi zekice özetleyerek bağlam penceresini boşaltır.' },
+  { category: 'ai', categoryLabel: 'Open Crow AI & Ajan', name: 'Plan Modu (/plan)', keys: ['/plan'], description: 'Ajanı mimari ve adım adım uygulama planı moduna geçirir.' },
+  { category: 'ai', categoryLabel: 'Open Crow AI & Ajan', name: 'Eylem Modu (/act)', keys: ['/act'], description: 'Ajanı doğrudan kod üretme ve dosya yazma moduna geçirir.' },
+  { category: 'ai', categoryLabel: 'Open Crow AI & Ajan', name: 'Modeller Konseyi (/council)', keys: ['/council'], description: 'Andrej Karpathy 3 aşamalı kör hakemlik konseyini toplar.' },
+  { category: 'ai', categoryLabel: 'Open Crow AI & Ajan', name: 'MCP Sunucuları (/mcp)', keys: ['/mcp'], description: 'Bağlı MCP sunucularını ve etkin araçları listeler.' },
+  { category: 'ai', categoryLabel: 'Open Crow AI & Ajan', name: 'Geliştirici Yetenekleri (/skills)', keys: ['/skills'], description: '100 Claude ve Antigravity yeteneğinin durumunu gösterir.' }
 ];
 
 export class ShortcutsModalManager {
@@ -85,7 +85,7 @@ export class ShortcutsModalManager {
             </svg>
             <div>
               <h3>Klavye Kısayolları ve Komut Rehberi</h3>
-              <p>Kraga IDE v1.9.0 — Üretkenliği artıran tüm kısayol ve komutlar</p>
+              <p>Open Crow v1.9.0 — Üretkenliği artıran tüm kısayol ve komutlar</p>
             </div>
           </div>
           <button id="btnCloseShortcutsModal" class="btn-modal-close" title="Kapat (Esc)">
@@ -103,7 +103,7 @@ export class ShortcutsModalManager {
             <button class="shortcuts-pill" data-cat="editor">Editör & Kodlama</button>
             <button class="shortcuts-pill" data-cat="nav">Gezinme</button>
             <button class="shortcuts-pill" data-cat="terminal">Terminal</button>
-            <button class="shortcuts-pill" data-cat="ai">Kraga AI</button>
+            <button class="shortcuts-pill" data-cat="ai">Open Crow AI</button>
           </div>
         </div>
 

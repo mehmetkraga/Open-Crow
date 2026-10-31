@@ -242,10 +242,7 @@ export const iconCheckCircle: IconFn = (s = 16, c = 'currentColor') =>
 
 // ─── Kraga Brand ─────────────────────────────────────────────────
 export const kragaBirdImg = (size = 24): string =>
-  `<img src="./assets/images/logo-bird.png" width="${size}" height="${size}" class="kraga-bird-icon" alt="Kraga" />`;
-
-export const kragaLogoImg = (height = 20): string =>
-  `<img src="./assets/images/logo-kraga-ai.png" height="${height}" class="kraga-logo-img" alt="Kraga AI" />`;
+  `<img src="./assets/images/logo-bird.png" width="${size}" height="${size}" class="kraga-bird-icon" alt="Open Crow" />`;
 
 export const iconPaperclip: IconFn = (s = 16, c = 'currentColor') =>
   svg(s, c, '<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>');

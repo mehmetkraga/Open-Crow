@@ -1,5 +1,5 @@
 // src/components/OutputPanel.ts
-// Kraga IDE — Visual Studio 2022 Çok Kanallı Çıktı Konsolu (Multi-Channel Output Window)
+// Open Crow — Visual Studio 2022 Çok Kanallı Çıktı Konsolu (Multi-Channel Output Window)
 // Yapay Zeka, Derleme, MCP Sunucuları, Git ve Genel IDE loglarını ayrı kanallarda tutar.
 
 export type OutputChannel = 'ai' | 'build' | 'mcp' | 'git' | 'general';
@@ -45,7 +45,7 @@ export class OutputPanelManager {
           <div class="vs-output-channel-group">
             <label class="vs-output-label" for="vsOutputChannelSelect">Çıktıyı göster:</label>
             <select class="vs-output-channel-select" id="vsOutputChannelSelect">
-              <option value="ai">Kraga AI Ajanı</option>
+              <option value="ai">Open Crow AI Ajanı</option>
               <option value="build">Derleme (Build)</option>
               <option value="mcp">MCP Sunucuları</option>
               <option value="git">Kaynak Denetimi (Git)</option>
@@ -126,11 +126,11 @@ export class OutputPanelManager {
     });
 
     // Başlangıç karşılama logları
-    this.append('ai', 'Kraga AI Ajanı hazır ve komutları dinliyor.', 'info');
+    this.append('ai', 'Open Crow AI Ajanı hazır ve komutları dinliyor.', 'info');
     this.append('build', 'Derleme çıktısı izleyicisi aktif.', 'info');
     this.append('mcp', 'MCP Model Context Protocol servisleri bağlandı.', 'info');
     this.append('git', 'Git sürüm kontrol kanalı bağlandı.', 'info');
-    this.append('general', 'Kraga IDE çalışma alanı başlatıldı.', 'info');
+    this.append('general', 'Open Crow çalışma alanı başlatıldı.', 'info');
   }
 
   public append(channel: OutputChannel, message: string, level: OutputLogLevel = 'info'): void {

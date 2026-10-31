@@ -1,5 +1,5 @@
 // src/components/SettingsModal.ts
-// Kraga IDE v2.5 — Tam Ekran, Arama Destekli, Modern Kart Mimarili Ayarlar Modalı
+// Open Crow v2.5 — Tam Ekran, Arama Destekli, Modern Kart Mimarili Ayarlar Modalı
 
 import {
   iconSettings, iconKey, iconZap, iconPalette, iconBarChart,
@@ -47,7 +47,7 @@ export class SettingsModalManager {
     webSearch: false,
     soundEffects: true,
     notifications: true,
-    systemPrompt: 'Sen Kraga AI, kıdemli bir yazılım mimarı ve kodlama asistanısın. Doğrudan, yüksek sinyalli ve temiz çözümler sun.',
+    systemPrompt: 'Sen Open Crow AI, kıdemli bir yazılım mimarı ve kodlama asistanısın. Doğrudan, yüksek sinyalli ve temiz çözümler sun.',
     theme: 'original-dark',
     language: 'tr',
     chatFont: 'sans' as 'sans' | 'serif' | 'mono' | 'system',
@@ -97,7 +97,7 @@ export class SettingsModalManager {
         const navPill = document.getElementById('settingsUpdateNavPill');
         if (navPill) navPill.style.display = 'inline-block';
         notificationManager.showToast({
-          title: '🚀 Yeni Kraga IDE Güncellemesi!',
+          title: '🚀 Yeni Open Crow Güncellemesi!',
           message: `${info.latestVersion} sürümü yayınlandı. Ayarlar üzerinden tek tıkla yükleyebilirsiniz.`,
           type: 'info',
           durationMs: 10000,
@@ -202,7 +202,7 @@ export class SettingsModalManager {
               ${iconKey(16)} <span>API & Modeller</span>
             </button>
             <button class="settings-nav__item" data-tab="kragaModels">
-              ${iconSparkles(16)} <span>Kraga Modelleri & Çarpanlar</span>
+              ${iconSparkles(16)} <span>Modeller</span>
             </button>
             <button class="settings-nav__item" data-tab="features">
               ${iconZap(16)} <span>Özellikler & AI</span>
@@ -343,7 +343,7 @@ export class SettingsModalManager {
 
     const meta: Record<SettingsTabId, { title: string; badge: string }> = {
       api: { title: 'API & Model Yapılandırması', badge: 'Sağlayıcı & BYOK' },
-      kragaModels: { title: 'Kraga AI Modelleri & Maliyet Çarpanları', badge: '5 Kategori' },
+      kragaModels: { title: 'Open Crow AI Modelleri & Maliyet Çarpanları', badge: '5 Kategori' },
       features: { title: 'Özellikler & AI Davranışları', badge: 'Streaming & Otomasyon' },
       permissions: { title: 'Çalışma İzinleri & Güvenlik Politikası', badge: 'Cursor Modeli' },
       general: { title: 'Görünüm & Editör Tercihleri', badge: 'Tema & Font' },
@@ -353,7 +353,7 @@ export class SettingsModalManager {
       graphify: { title: 'Graphify — Kod AST Analiz Motoru', badge: 'Bilgi Grafı' },
       memory: { title: 'Akıllı Hafıza (Smart Memory)', badge: 'Bağlam Kalıcılığı' },
       updates: { title: 'Uygulama Güncellemeleri & Sürümler', badge: 'Auto-Updater' },
-      about: { title: 'Kraga IDE Hakkında', badge: 'v1.9.0' }
+      about: { title: 'Open Crow Hakkında', badge: 'v1.9.0' }
     };
 
     titleEl.textContent = meta[this.activeTab].title;
@@ -478,7 +478,7 @@ export class SettingsModalManager {
           <div class="settings-card__header">
             <div class="settings-card__icon-wrap">${iconSparkles(18, 'var(--accent-color, #00f0ff)')}</div>
             <div>
-              <h3 class="settings-card__title">Kraga AI Model ve Çarpan Rehberi</h3>
+              <h3 class="settings-card__title">Open Crow AI Model ve Çarpan Rehberi</h3>
               <p class="settings-card__desc">
                 Her modelin harcadığı token miktarı web sitemizdeki gibi renkli maliyet çarpanı ile hesaplanır. Örneğin 1.0x standart tüketimken, 0.5x yarı yarıya tasarruf sağlar, 5.0x ise 1M bağlam penceresine sahip amiral gemisi işlemcisidir. Aşağıdan modellerin kullanım amaçlarını inceleyebilir ve tek tıkla varsayılan modelinizi seçebilirsiniz.
               </p>
@@ -983,7 +983,7 @@ export class SettingsModalManager {
           <div>
             <h4 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">Cursor Tarzı Güvenlik ve Çalışma İzinleri</h4>
             <p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-secondary);">
-              Kraga IDE yerleşik bir masaüstü geliştirme ortamıdır. Ajanın terminalde komut koşturması, dosyaları değiştirmesi veya harici MCP araçlarını tetiklemesi üzerindeki denetim politikanızı buradan yapılandırabilirsiniz.
+              Open Crow yerleşik bir masaüstü geliştirme ortamıdır. Ajanın terminalde komut koşturması, dosyaları değiştirmesi veya harici MCP araçlarını tetiklemesi üzerindeki denetim politikanızı buradan yapılandırabilirsiniz.
             </p>
           </div>
         </div>
@@ -1299,7 +1299,7 @@ export class SettingsModalManager {
           <div class="settings-toggle-row">
             <div class="settings-toggle-info">
               <span class="settings-toggle-title">Response completions (Yanıt Tamamlanma Bildirimi)</span>
-              <p class="settings-toggle-desc">Get notified when Kraga has finished a response. Useful for long-running tasks. (Kraga yanıt vermeyi bitirdiğinde bildirim al. Uzun süren görevler için kullanışlıdır.)</p>
+              <p class="settings-toggle-desc">Get notified when Open Crow has finished a response. Useful for long-running tasks. (Open Crow yanıt vermeyi bitirdiğinde bildirim al. Uzun süren görevler için kullanışlıdır.)</p>
             </div>
             <label class="skill-toggle-switch">
               <input type="checkbox" id="featNotifyOnResponse" ${this.settings.notifyOnResponse ? 'checked' : ''}>
@@ -1766,7 +1766,7 @@ export class SettingsModalManager {
             ${iconRefresh(18, '#ffffff')}
           </div>
           <div style="flex: 1;">
-            <h3 class="settings-card__title">Kraga IDE Sürüm ve Güncellemeler</h3>
+            <h3 class="settings-card__title">Open Crow Sürüm ve Güncellemeler</h3>
             <p class="settings-card__desc">Yerleşik otomatik güncelleme motoru ile yeni sürümleri doğrudan IDE içinden kurun.</p>
           </div>
           <span class="settings-badge" style="background: rgba(255, 255, 255, 0.08); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.2); font-weight: 600; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-family: var(--font-mono, monospace);">v${currentVer}</span>
@@ -1919,11 +1919,11 @@ export class SettingsModalManager {
                   </div>
                   <div>
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
-                      <h4 style="margin: 0; font-size: 14px; font-weight: 600; color: #ffffff;">Tebrikler, Kraga IDE En Güncel Sürümde!</h4>
+                      <h4 style="margin: 0; font-size: 14px; font-weight: 600; color: #ffffff;">Tebrikler, Open Crow En Güncel Sürümde!</h4>
                       <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 11px; padding: 1px 7px; border-radius: 4px; font-weight: 600; font-family: var(--font-mono, monospace);">v${info.currentVersion || currentVer}</span>
                     </div>
                     <p style="margin: 0; font-size: 12px; color: var(--text-secondary); line-height: 1.4;">
-                      Mevcut yüklü v${info.currentVersion || currentVer} sürümü resmi son kararlı sürümdür. Yeni bir güncelleme yayınlandığında Kraga sizi bilgilendirecektir.
+                      Mevcut yüklü v${info.currentVersion || currentVer} sürümü resmi son kararlı sürümdür. Yeni bir güncelleme yayınlandığında Open Crow sizi bilgilendirecektir.
                     </p>
                   </div>
                 </div>
@@ -1965,7 +1965,7 @@ export class SettingsModalManager {
                     <span style="font-family: var(--font-mono, monospace); font-weight: 700; color: #ffffff; font-size: 13px;">v${info.latestVersion}</span>
                     <span style="font-size: 12px; color: var(--text-muted);">• ${sizeMb}</span>
                   </div>
-                  <h3 style="margin: 4px 0 2px 0; font-size: 15px; font-weight: 600; color: var(--text-primary);">${info.releaseName || 'Kraga IDE v' + info.latestVersion}</h3>
+                  <h3 style="margin: 4px 0 2px 0; font-size: 15px; font-weight: 600; color: var(--text-primary);">${info.releaseName || 'Open Crow v' + info.latestVersion}</h3>
                   <div style="font-size: 12px; color: var(--text-muted);">In-App Otomatik Kurulum veya Doğrudan İndirme</div>
                 </div>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -2103,10 +2103,10 @@ export class SettingsModalManager {
     container.innerHTML = `
       <div class="settings-card" style="text-align: center; padding: 36px 24px;">
         <div style="position: relative; display: inline-block; margin-bottom: 16px;">
-          <img src="./assets/images/logo-bird.png" width="96" height="96" alt="Kraga Bird Logo" style="filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.45));" />
+          <img src="./assets/images/logo-bird.png" width="96" height="96" alt="Open Crow Logo" style="filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.45));" />
         </div>
         <h2 style="margin: 0 0 8px 0; font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">
-          Kraga IDE <span style="color: var(--accent-color, #00f0ff);">v${appVer}</span>
+          Open Crow <span style="color: var(--accent-color, #00f0ff);">v${appVer}</span>
         </h2>
         <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
           <span class="settings-badge" style="background: rgba(0, 240, 255, 0.12); color: #00f0ff; border: 1px solid rgba(0, 240, 255, 0.3);">Resmi Sürüm</span>

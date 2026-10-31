@@ -1,5 +1,5 @@
 /**
- * Kraga IDE - İzin ve Yürütme Güvenlik Yöneticisi (PermissionManager)
+ * Open Crow - İzin ve Yürütme Güvenlik Yöneticisi (PermissionManager)
  * Cursor-style detaylı çalışma izinleri ve güvenlik denetimi.
  */
 

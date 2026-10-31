@@ -1,5 +1,5 @@
 // src/components/GraphifyPanel.ts
-// Kraga IDE — Cytoscape Tabanlı İnteraktif Kod Bilgi Grafı (Graphify Visualizer)
+// Open Crow — Cytoscape Tabanlı İnteraktif Kod Bilgi Grafı (Graphify Visualizer)
 // - Dosyalar, sınıflar, fonksiyonlar ve import ilişkilerini dallanmış ağaç / kozmik graf olarak çizer
 // - Neon Cyberpunk temalı düğümler ve yönlü oklar
 // - Düğüme tıklandığında dosyayı Monaco Editor'de açar

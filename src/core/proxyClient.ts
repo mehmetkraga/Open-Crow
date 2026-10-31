@@ -1,5 +1,5 @@
 // src/core/proxyClient.ts
-// Kraga AI Cloudflare Proxy & Özel API İstemcisi (Streaming SSE, Abort, Token Telemetrisi)
+// Open Crow AI Cloudflare Proxy & Özel API İstemcisi (Streaming SSE, Abort, Token Telemetrisi)
 
 import { TokenTracker } from './TokenTracker';
 

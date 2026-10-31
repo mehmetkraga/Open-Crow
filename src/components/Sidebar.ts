@@ -1,5 +1,5 @@
 // src/components/Sidebar.ts
-// Kraga IDE v2.5 — Çoklu Görünümlü Kenar Çubuğu Yöneticisi (Gezgin, Arama, Git, Eklentiler)
+// Open Crow v2.5 — Çoklu Görünümlü Kenar Çubuğu Yöneticisi (Gezgin, Arama, Git, Eklentiler)
 
 import {
   iconFolder, iconFolderOpen, iconChevronRight, iconChevronDown,

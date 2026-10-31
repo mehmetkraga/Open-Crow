@@ -1,5 +1,5 @@
 // src/components/SubagentPanel.ts
-// Kraga IDE v2.7 — Subagent Paneli UI
+// Open Crow v2.7 — Subagent Paneli UI
 // Aktif ve tamamlanmis subagent'larin gercek zamanli gorunumu
 
 import DOMPurify from 'dompurify';

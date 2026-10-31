@@ -1,5 +1,5 @@
 // src/components/mcpCatalogData.ts
-// Kraga IDE v2.5 — Doğrulanmış MCP Sunucuları Kataloğu (yalnızca gerçekten var olan paketler ve uzak sunucular)
+// Open Crow v2.5 — Doğrulanmış MCP Sunucuları Kataloğu (yalnızca gerçekten var olan paketler ve uzak sunucular)
 
 import {
   logoGitHub, logoDocker, logoBrave, logoLinear, logoSequentialThinking, logoBlender, logoGodot, logoGit, logoBitbucket, logoSQLite, logoMySQL, logoMongoDB, logoSnowflake, logoQdrant, logoKubernetes, logoCloudflare, logoAzure, logoGCP, logoVercel, logoDatadog, logoExa, logoPerplexity, logoPlaywright, logoFirecrawl, logoFetch, logoNotion, logoConfluence, logoAsana, logoTodoist, logoObsidian, logoTelegram, logoWhatsApp, logoStripe, logoAirtable, logoTwilio, logoSendGrid, logoMeshy, logoReplicate, logoElevenLabs, logoHuggingFace, logoMemory, logoFilesystem, logoTime

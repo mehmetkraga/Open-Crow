@@ -1,5 +1,5 @@
 // src/components/InlineEditBar.ts
-// Kraga IDE v2.5 — Monaco Editör Satır İçi AI Düzenleme Çubuğu (Ctrl+K)
+// Open Crow v2.5 — Monaco Editör Satır İçi AI Düzenleme Çubuğu (Ctrl+K)
 // Cursor & Windsurf standartlarında yüzen prompt çubuğu, hızlı haplar ve canlı diff onay akışı
 
 import * as monaco from 'monaco-editor';
@@ -47,7 +47,7 @@ export class InlineEditBar {
         <div class="inline-edit-bar__header">
           <div class="inline-edit-bar__brand">
             ${iconSparkles(15, 'var(--accent-color, #00f0ff)')}
-            <span>Kraga AI Inline Edit</span>
+            <span>Open Crow AI Inline Edit</span>
           </div>
           <div class="inline-edit-bar__badge" id="inlineEditModelBadge">GPT 5.4 Mini</div>
         </div>
@@ -92,7 +92,7 @@ export class InlineEditBar {
         <!-- Canlı İlerleme / Üretim Durumu -->
         <div class="inline-edit-bar__status inline-edit-bar__status--hidden" id="inlineEditStatus">
           <div class="inline-spinner" style="width: 14px; height: 14px;"></div>
-          <span id="inlineEditStatusText">Kraga AI kodu düzenliyor...</span>
+          <span id="inlineEditStatusText">Open Crow AI kodu düzenliyor...</span>
           <button class="inline-edit-btn-abort" id="btnInlineEditAbort">Durdur</button>
         </div>
 
@@ -323,14 +323,14 @@ export class InlineEditBar {
     if (this.statusEl) {
       this.statusEl.classList.remove('inline-edit-bar__status--hidden');
       const textEl = this.statusEl.querySelector('#inlineEditStatusText');
-      if (textEl) textEl.textContent = 'Kraga AI kodu cerrahi olarak düzenliyor...';
+      if (textEl) textEl.textContent = 'Open Crow AI kodu cerrahi olarak düzenliyor...';
     }
 
     const model = this.editor.getModel();
     const lang = model ? model.getLanguageId() : 'typescript';
     const activeModelId = localStorage.getItem('kraga:model') || 'gpt-5.4-mini';
 
-    const systemPrompt = `Sen Kraga IDE'nin yüksek hızlı, cerrahi satır içi kod düzenleyicisisin (Inline AI Editor).
+    const systemPrompt = `Sen Open Crow'nin yüksek hızlı, cerrahi satır içi kod düzenleyicisisin (Inline AI Editor).
 Kullanıcının talimatına göre verilen kaynak kod parçasını doğrudan değiştir.
 
 KESİNLİKLE UYULMASI GEREKEN KURALLAR (Cursor & Claude Code Altın Standartları):

@@ -1,5 +1,5 @@
 // src/components/VsStandardToolbar.ts
-// Kraga IDE — Visual Studio 2022 Standart Düzenleme ve Hata Ayıklama Araç Çubuğu (Standard Toolbar)
+// Open Crow — Visual Studio 2022 Standart Düzenleme ve Hata Ayıklama Araç Çubuğu (Standard Toolbar)
 
 export interface VsToolbarEvents {
   onNavigateBack?: () => void;

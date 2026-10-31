@@ -1,5 +1,5 @@
 // src/components/SubagentManager.ts
-// Kraga IDE v2.7 — Subagent Orkestrasyon Yoneticisi
+// Open Crow v2.7 — Subagent Orkestrasyon Yoneticisi
 // Her subagent izole baglam, kendi mesaj gecmisi ve tool loop'u ile calisir.
 
 import { sendAgentStream, ChatMessage } from '../core/proxyClient';

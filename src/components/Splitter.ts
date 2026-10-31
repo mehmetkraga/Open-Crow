@@ -1,5 +1,5 @@
 // src/components/Splitter.ts
-// Kraga IDE — Akıcı Panel Ayırıcı ve Responsive Boyutlandırıcı (Center Fluid Architecture)
+// Open Crow — Akıcı Panel Ayırıcı ve Responsive Boyutlandırıcı (Center Fluid Architecture)
 
 export interface SplitterOptions {
   direction: 'horizontal' | 'vertical';
