@@ -211,6 +211,12 @@ interface ToolCard {
   setStatus(status: CardStatus): void;
   setResult(text: string): void;
   askApproval(call: ToolCall, args: Record<string, unknown>, onDecision: (approved: boolean) => void): void;
+  clearApproval(): void;
+}
+
+interface PreviewLine {
+  sign: '+' | '-' | '';
+  text: string;
 }
 
 function parseArgs(raw: string): Record<string, unknown> {
@@ -221,28 +227,64 @@ function parseArgs(raw: string): Record<string, unknown> {
   }
 }
 
+function previewLines(name: string, args: Record<string, unknown>): PreviewLine[] {
+  if (name === 'edit_file') {
+    return [
+      ...String(args.old_string ?? '').split('\n').map((text): PreviewLine => ({ sign: '-', text })),
+      ...String(args.new_string ?? '').split('\n').map((text): PreviewLine => ({ sign: '+', text })),
+    ];
+  }
+  if (name === 'write_file') {
+    return String(args.content ?? '').split('\n').map((text): PreviewLine => ({ sign: '', text }));
+  }
+  if (name === 'run_command') {
+    return [{ sign: '', text: String(args.command ?? '') }];
+  }
+  return [];
+}
+
+function countLines(value: unknown): number {
+  const text = String(value ?? '');
+  return text === '' ? 0 : text.split('\n').length;
+}
+
+/** Onay kartındaki tek satırlık özet: ne kadar değişeceği. */
+function approvalSummary(name: string, args: Record<string, unknown>): string {
+  if (name === 'edit_file') {
+    return `${countLines(args.old_string)} satır çıkarılacak, ${countLines(args.new_string)} satır eklenecek.`;
+  }
+  if (name === 'write_file') return `Dosya yazılacak: ${countLines(args.content)} satır.`;
+  if (name === 'run_command') return 'Komut bu bilgisayarda çalıştırılacak.';
+  return '';
+}
+
 function approvalPreview(name: string, args: Record<string, unknown>): HTMLPreElement {
   const pre = document.createElement('pre');
   pre.className = 'tool-preview';
-  const lines: string[] = [];
-  if (name === 'edit_file') {
-    const oldLines = String(args.old_string ?? '').split('\n').map((l) => `- ${l}`);
-    const newLines = String(args.new_string ?? '').split('\n').map((l) => `+ ${l}`);
-    lines.push(...oldLines, ...newLines);
-  } else if (name === 'write_file') {
-    lines.push(...String(args.content ?? '').split('\n'));
-  } else if (name === 'run_command') {
-    lines.push(String(args.command ?? ''));
+  pre.tabIndex = 0;
+  const lines = previewLines(name, args);
+  for (const line of lines.slice(0, 60)) {
+    const row = document.createElement('span');
+    row.className = line.sign === '+' ? 'tool-line add' : line.sign === '-' ? 'tool-line del' : 'tool-line';
+    // İşaret metinde de yer alır: renk kör ve ekran okuyucu kullanıcıları için de anlaşılır kalır
+    row.textContent = line.sign ? `${line.sign} ${line.text}` : line.text;
+    pre.appendChild(row);
   }
-  const limited = lines.slice(0, 60);
-  if (lines.length > 60) limited.push(`… (${lines.length - 60} satır daha)`);
-  for (const line of limited) {
-    const span = document.createElement('span');
-    span.className = line.startsWith('+ ') ? 'add' : line.startsWith('- ') ? 'del' : '';
-    span.textContent = `${line}\n`;
-    pre.appendChild(span);
+  if (lines.length > 60) {
+    const more = document.createElement('span');
+    more.className = 'tool-line tool-more';
+    more.textContent = `… (${lines.length - 60} satır daha)`;
+    pre.appendChild(more);
   }
   return pre;
+}
+
+function textLine(className: string, text: string): HTMLParagraphElement {
+  const p = document.createElement('p');
+  p.className = className;
+  p.textContent = text;
+  p.title = text;
+  return p;
 }
 
 function createToolCard(call: { id: string; name: string; arguments: string }): ToolCard {
@@ -251,6 +293,7 @@ function createToolCard(call: { id: string; name: string; arguments: string }): 
   root.className = 'tool-card';
   root.dataset.status = 'running';
 
+  const targetText = summarizeCall(call.name, args);
   const summary = document.createElement('summary');
   summary.className = 'tool-head';
   const label = document.createElement('span');
@@ -258,7 +301,8 @@ function createToolCard(call: { id: string; name: string; arguments: string }): 
   label.textContent = TOOL_LABELS[call.name] ?? call.name;
   const target = document.createElement('span');
   target.className = 'tool-target';
-  target.textContent = summarizeCall(call.name, args);
+  target.textContent = targetText;
+  target.title = targetText;
   const status = document.createElement('span');
   status.className = 'tool-status';
   status.textContent = STATUS_TEXT.running;
@@ -266,10 +310,13 @@ function createToolCard(call: { id: string; name: string; arguments: string }): 
 
   const approval = document.createElement('div');
   approval.className = 'tool-approval';
+  approval.setAttribute('role', 'group');
+  approval.tabIndex = -1;
   approval.hidden = true;
 
   const result = document.createElement('pre');
   result.className = 'tool-result';
+  result.tabIndex = 0;
   result.hidden = true;
 
   root.append(summary, approval, result);
@@ -287,20 +334,30 @@ function createToolCard(call: { id: string; name: string; arguments: string }): 
       result.textContent = text;
       result.hidden = !text;
     },
+    clearApproval() {
+      approval.hidden = true;
+      approval.replaceChildren();
+    },
     askApproval(c, a, onDecision) {
       approval.replaceChildren();
       approval.hidden = false;
       root.open = true;
 
-      const question = document.createElement('p');
-      question.className = 'approval-question';
-      question.textContent = c.name === 'run_command' ? 'Bu komutu çalıştırmama izin veriyor musun?' : 'Bu değişikliğe izin veriyor musun?';
-      const where = document.createElement('p');
-      where.className = 'approval-where';
-      where.textContent = `Klasör: ${workspace ?? '-'}`;
+      const isCommand = c.name === 'run_command';
+      const question = isCommand ? 'Bu komutu çalıştırmama izin veriyor musun?' : 'Bu değişikliğe izin veriyor musun?';
+      const questionEl = document.createElement('p');
+      questionEl.className = 'approval-question';
+      questionEl.textContent = question;
+
+      const parts: HTMLElement[] = [questionEl, textLine('approval-where', `Klasör: ${workspace ?? '-'}`)];
+      const file = isCommand ? '' : summarizeCall(c.name, a);
+      if (file) parts.push(textLine('approval-where', `Dosya: ${file}`));
+      const kind = approvalSummary(c.name, a);
+      if (kind) parts.push(textLine('approval-kind', kind));
 
       const buttons = document.createElement('div');
       buttons.className = 'approval-actions';
+      // Sıra tutarlı: Reddet solda (ikincil), İzin ver sağda (birincil)
       const deny = document.createElement('button');
       deny.type = 'button';
       deny.className = 'btn-ghost';
@@ -310,15 +367,19 @@ function createToolCard(call: { id: string; name: string; arguments: string }): 
       allow.className = 'btn-primary';
       allow.textContent = 'İzin ver';
 
+      // Karar verilince kart başlığına odak döner; onDecision düğmeleri de temizler
       const decide = (approved: boolean) => {
-        approval.hidden = true;
+        summary.focus();
         onDecision(approved);
       };
       deny.addEventListener('click', () => decide(false));
       allow.addEventListener('click', () => decide(true));
       buttons.append(deny, allow);
 
-      approval.append(question, where, approvalPreview(c.name, a), buttons);
+      parts.push(approvalPreview(c.name, a), buttons);
+      approval.setAttribute('aria-label', question);
+      approval.append(...parts);
+      approval.focus();
     },
   };
 }
@@ -686,6 +747,7 @@ async function send(rawText: string): Promise<void> {
       return new Promise<boolean>((resolve) => {
         const settle = (approved: boolean) => {
           view.pendingApprovals.delete(call.id);
+          card?.clearApproval();
           card?.setStatus(approved ? 'running' : 'denied');
           resolve(approved);
         };

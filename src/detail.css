@@ -344,22 +344,21 @@ textarea {
   border-color: var(--border-strong);
 }
 
-/* ---------- Araç kartları: derinlik ve çalışma sırasında yayılan ışık ---------- */
+/* ---------- Araç kartları: düz kenarlık, düşük yoğunlukta çalışma ışığı ---------- */
 
 .tool-card {
-  box-shadow: var(--elev-1);
-  transition: border-color 0.2s ease, box-shadow 0.25s ease;
+  transition: border-color 0.2s ease;
 }
 
-.tool-card:hover {
+.tool-card:not([data-status="approval"]):hover {
   border-color: var(--border-strong);
-  box-shadow: var(--elev-2);
 }
 
+/* Çalışırken yavaş ve silik bir parıltı; reduced-motion altında durur */
 .tool-card[data-status="running"] .tool-head {
-  background-image: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--accent-hover) 7%, transparent) 50%, transparent 100%);
+  background-image: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--accent-hover) 4%, transparent) 50%, transparent 100%);
   background-size: 220% 100%;
-  animation: sheen 2.2s linear infinite;
+  animation: sheen 3s linear infinite;
 }
 
 @keyframes sheen {
@@ -368,17 +367,6 @@ textarea {
   }
   to {
     background-position: -120% 0;
-  }
-}
-
-.tool-card[data-status="approval"] {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--attention) 12%, transparent), var(--elev-2);
-  animation: approval-breathe 2.8s ease-in-out infinite;
-}
-
-@keyframes approval-breathe {
-  50% {
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--attention) 18%, transparent), var(--elev-2);
   }
 }
 
