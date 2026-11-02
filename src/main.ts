@@ -101,37 +101,45 @@ function renderMarkdown(text: string): string {
   return DOMPurify.sanitize(raw, { USE_PROFILES: { html: true } });
 }
 
+/** Kod bloğu: üstte dil etiketi + kopyala düğmesi şeridi, altında kaydırılabilir kod. */
 function decorateCodeBlocks(container: HTMLElement): void {
   container.querySelectorAll<HTMLPreElement>('pre').forEach((pre) => {
     if (pre.parentElement?.classList.contains('code-wrap')) return;
     const wrap = document.createElement('div');
     wrap.className = 'code-wrap';
     pre.parentNode?.insertBefore(wrap, pre);
-    wrap.appendChild(pre);
 
-    const language = pre.querySelector('code')?.className.match(/language-([\w-]+)/)?.[1];
-    if (language) {
-      wrap.classList.add('has-lang');
-      const label = document.createElement('span');
-      label.className = 'code-lang';
-      label.textContent = language;
-      wrap.appendChild(label);
-    }
+    const head = document.createElement('div');
+    head.className = 'code-head';
+    const label = document.createElement('span');
+    label.className = 'code-lang';
+    label.textContent = pre.querySelector('code')?.className.match(/language-([\w-]+)/)?.[1] ?? '';
+    head.appendChild(label);
 
     const copy = document.createElement('button');
     copy.type = 'button';
     copy.className = 'code-copy';
     copy.textContent = 'Kopyala';
+    let resetTimer = 0;
     copy.addEventListener('click', async () => {
+      window.clearTimeout(resetTimer);
+      copy.classList.remove('is-copied', 'is-failed');
       try {
         await navigator.clipboard.writeText(pre.innerText);
         copy.textContent = 'Kopyalandı';
+        copy.classList.add('is-copied');
       } catch {
         copy.textContent = 'Kopyalanamadı';
+        copy.classList.add('is-failed');
       }
-      window.setTimeout(() => (copy.textContent = 'Kopyala'), 1500);
+      resetTimer = window.setTimeout(() => {
+        copy.textContent = 'Kopyala';
+        copy.classList.remove('is-copied', 'is-failed');
+      }, 1500);
     });
-    wrap.appendChild(copy);
+    head.appendChild(copy);
+
+    wrap.append(head, pre);
   });
 }
 
@@ -642,6 +650,8 @@ async function send(rawText: string): Promise<void> {
 
     async onAssistant(msg) {
       const node = ensureCurrent(view);
+      // İmleç, kayıt beklenirken de yanıp durmasın: yanıt tamamlandı
+      node.streamText?.classList.remove('is-streaming');
       const stored = await history.addMessage(session.id, storedFields(msg));
       view.current = null;
       if (!stored.content && !stored.toolCalls?.length) {

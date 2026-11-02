@@ -298,7 +298,7 @@ textarea {
   margin-left: 2px;
   vertical-align: text-bottom;
   border-radius: 1px;
-  background: var(--accent-hover);
+  background: var(--text-2);
   animation: caret 1s steps(1) infinite;
 }
 
@@ -323,11 +323,9 @@ textarea {
   }
 }
 
-/* Kod blokları: dil etiketi ve derinlik */
+/* Kod blokları: derinlik ve düğme etkileşimi (yerleşim app.css'te) */
 
 .code-wrap {
-  overflow: hidden;
-  border-radius: var(--radius);
   box-shadow: var(--elev-1);
 }
 
@@ -336,37 +334,13 @@ textarea {
   border-radius: 0;
 }
 
-.code-lang {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  height: 28px;
-  padding: 0 12px;
-  background: color-mix(in srgb, var(--surface) 80%, transparent);
-  border-bottom: 1px solid var(--border);
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--muted);
-  pointer-events: none;
-}
-
-.code-wrap.has-lang pre {
-  padding-top: 38px;
-}
-
-.code-wrap.has-lang .code-copy {
-  top: 4px;
-}
-
 .code-copy {
-  transition: opacity 0.2s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.code-copy:hover {
+.code-copy:not(.is-copied):not(.is-failed):hover {
   color: var(--text);
+  background: var(--panel);
   border-color: var(--border-strong);
 }
 
