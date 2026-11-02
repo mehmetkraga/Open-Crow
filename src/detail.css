@@ -85,41 +85,23 @@ textarea {
 
 /* ---------- Gezinti öğeleri: imleci izleyen ışık ---------- */
 
+/* Vurgu bir arka plan katmanı olarak eklenir: ::before/::after öğeleri başka
+   stiller (durum noktası, ok) tarafından kullanıldığı için onlara dokunulmaz. */
 .session-item,
 .suggestion,
 .new-chat,
 .side-footer,
-.tool-head,
 .workspace-btn {
   position: relative;
   overflow: hidden;
-  isolation: isolate;
 }
 
-.session-item::before,
-.suggestion::before,
-.new-chat::before,
-.side-footer::before,
-.tool-head::before,
-.workspace-btn::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: radial-gradient(160px circle at var(--mx, 50%) var(--my, 50%), var(--spot), transparent 70%);
-  opacity: 0;
-  transition: opacity 0.3s var(--ease-soft);
-  pointer-events: none;
-}
-
-.session-item:hover::before,
-.suggestion:hover::before,
-.new-chat:hover::before,
-.side-footer:hover::before,
-.tool-head:hover::before,
-.workspace-btn:hover::before {
-  opacity: 1;
+.session-item:hover,
+.suggestion:hover,
+.new-chat:hover,
+.side-footer:hover,
+.workspace-btn:hover {
+  background-image: radial-gradient(160px circle at var(--mx, 50%) var(--my, 50%), var(--spot), transparent 70%);
 }
 
 /* Tıklama yansıması: tıklanan noktadan yayılıp sönen ışık */
@@ -135,7 +117,7 @@ textarea {
   transform: translate(-50%, -50%);
   pointer-events: none;
   z-index: 0;
-  animation: press-bloom 0.7s var(--ease-soft) forwards;
+  animation: press-bloom 0.55s var(--ease-soft) forwards;
 }
 
 @keyframes press-bloom {
@@ -182,7 +164,9 @@ textarea {
   z-index: 0;
 }
 
-.composer > * {
+/* Metin alanı ve düğmeler ışık katmanının üstünde kalsın.
+   press-light hariç tutulur: aksi halde akışa girip kutuyu büyütür. */
+.composer > :not(.press-light) {
   position: relative;
   z-index: 1;
 }
@@ -373,7 +357,7 @@ textarea {
   border-bottom: 1px solid var(--border);
   font-family: var(--mono);
   font-size: 11px;
-  color: var(--faint);
+  color: var(--muted);
   pointer-events: none;
 }
 
@@ -432,8 +416,13 @@ textarea {
   }
 }
 
-.tool-head::before {
-  transition: opacity 0.3s var(--ease-soft);
+/* Basılma ışığı (press-light) bu öğelerin içinde kırpılır */
+.approval-actions button,
+.btn-ghost,
+.btn-primary,
+.send-btn {
+  position: relative;
+  overflow: hidden;
 }
 
 .tool-preview .add {

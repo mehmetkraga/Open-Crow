@@ -12,7 +12,7 @@
   --text: #f7f8f8;
   --text-2: #d0d6e0;
   --muted: #8a8f98;
-  --faint: #62666d;
+  --faint: #8a8f98;
   --accent: #5e6ad2;
   --accent-hover: #828fff;
   --accent-ink: #ffffff;
@@ -39,7 +39,7 @@
     --text: #17181a;
     --text-2: #3b3e45;
     --muted: #6b6f76;
-    --faint: #9ca0a8;
+    --faint: #6b6f76;
     --accent: #5e6ad2;
     --accent-hover: #4f5bc4;
     --accent-ink: #ffffff;
@@ -117,7 +117,7 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 34px;
+  height: 36px;
   padding-left: 12px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -412,6 +412,7 @@ button:disabled {
 }
 
 .msg-assistant .msg-body {
+  max-width: 70ch;
   word-break: break-word;
 }
 
@@ -522,7 +523,7 @@ button:disabled {
 
 .code-wrap pre {
   margin: 0;
-  padding: 12px 14px;
+  padding: 12px 16px;
   overflow-x: auto;
   border-radius: var(--radius);
   background: var(--surface);
@@ -576,7 +577,7 @@ button:disabled {
 }
 
 .suggestion {
-  padding: 10px 2px;
+  padding: 12px 4px;
   border: 0;
   border-bottom: 1px solid var(--border);
   background: transparent;
@@ -689,7 +690,7 @@ button:disabled {
 
 .modal {
   width: min(440px, 100%);
-  padding: 16px 18px 18px;
+  padding: 16px 20px 20px;
   border: 1px solid var(--border-strong);
   border-radius: 12px;
   background: var(--surface);
@@ -828,7 +829,7 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 10px;
+  padding: 8px 12px;
   cursor: pointer;
   list-style: none;
   font-size: 13px;
@@ -904,7 +905,7 @@ button:disabled {
   margin: 0;
   max-height: 240px;
   overflow: auto;
-  padding: 8px 10px;
+  padding: 8px 12px;
   border-top: 1px solid var(--border);
   font-family: var(--mono);
   font-size: 12px;
@@ -915,7 +916,7 @@ button:disabled {
 }
 
 .tool-approval {
-  padding: 10px;
+  padding: 12px;
   border-top: 1px solid var(--border);
 }
 
@@ -939,7 +940,7 @@ button:disabled {
   margin: 0 0 10px;
   max-height: 220px;
   overflow: auto;
-  padding: 8px 10px;
+  padding: 8px 12px;
   border-radius: var(--radius-sm);
   background: var(--bg);
   border: 1px solid var(--border);

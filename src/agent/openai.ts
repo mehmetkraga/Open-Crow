@@ -117,6 +117,16 @@ function authHeaders(config: ProviderConfig): Record<string, string> {
   return headers;
 }
 
+/** fetch ağ hatasını anlaşılır bir mesaja çevirir; iptal (AbortError) olduğu gibi geçer. */
+async function request(url: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, init);
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') throw err;
+    throw new Error('Sağlayıcıya bağlanılamadı. Adresi ve internet bağlantını kontrol et.');
+  }
+}
+
 export async function streamChatCompletion(
   config: ProviderConfig,
   body: { model: string; messages: ApiMessage[]; tools?: { type: 'function'; function: ToolSpec }[] },
@@ -125,7 +135,7 @@ export async function streamChatCompletion(
   const url = normalizeEndpointUrl(config.baseUrl, '/chat/completions');
   if (!url) throw new Error('API adresi tanımlı değil. Ayarlar bölümünden ekle.');
 
-  const response = await fetch(url, {
+  const response = await request(url, {
     method: 'POST',
     headers: authHeaders(config),
     body: JSON.stringify({ ...body, stream: true }),
@@ -151,6 +161,11 @@ export async function streamChatCompletion(
     const chunk = parseSSELine(line);
     if (chunk === null) return true;
     if (chunk === undefined) return false;
+    // Sağlayıcılar akış ortasında hata parçası gönderebilir; yok sayılmaz
+    const streamError = (chunk as { error?: { message?: string } | string }).error;
+    if (streamError) {
+      throw new Error(typeof streamError === 'string' ? streamError : streamError.message || 'Sağlayıcı akış sırasında hata verdi.');
+    }
     const before = accumulator.content.length;
     accumulator.push(chunk);
     const delta = accumulator.content.slice(before);
@@ -176,7 +191,7 @@ export async function streamChatCompletion(
 export async function fetchModels(config: ProviderConfig): Promise<{ id: string; name: string }[]> {
   const url = normalizeEndpointUrl(config.baseUrl, '/models');
   if (!url) throw new Error('API adresi tanımlı değil.');
-  const response = await fetch(url, { headers: authHeaders(config) });
+  const response = await request(url, { headers: authHeaders(config) });
   if (response.status === 401 || response.status === 403) {
     throw new Error(`Yetkilendirme hatası (${response.status}): API anahtarı geçersiz veya eksik.`);
   }

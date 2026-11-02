@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { resolveInWorkspace, relativeTo } from '../src/agent/workspace';
-import { StreamAccumulator, parseSSELine, normalizeEndpointUrl, parseModelList } from '../src/agent/openai';
+import { StreamAccumulator, parseSSELine, normalizeEndpointUrl, parseModelList, streamChatCompletion, fetchModels } from '../src/agent/openai';
 import { requiresApproval, executeTool, summarizeCall, type ToolBackend } from '../src/agent/tools';
 import { runAgentTurn, type AgentEvents } from '../src/agent/loop';
 import type { ChatMessage, ToolCall } from '../src/core/ChatHistory';
@@ -56,6 +56,20 @@ describe('SSE ve akış birleştirme', () => {
     const acc = new StreamAccumulator();
     acc.push({ choices: [{ delta: { tool_calls: [{ index: 1, id: 'b', function: { name: 'grep', arguments: '{}' } }, { index: 0, id: 'a', function: { name: 'glob', arguments: '{}' } }] } }] });
     expect(acc.result().toolCalls.map((c) => c.id)).toEqual(['a', 'b']);
+  });
+});
+
+describe('akış hataları', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('akış ortasındaki hata parçası istisna olarak iletilir', async () => {
+    const body = 'data: {"choices":[{"delta":{"content":"Yarım"}}]}\n\ndata: {"error":{"message":"kota doldu"}}\n\ndata: [DONE]\n\n';
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(body, { status: 200 })));
+    await expect(
+      streamChatCompletion({ baseUrl: 'https://p.example', apiKey: 'k' }, { model: 'm', messages: [] }),
+    ).rejects.toThrow('kota doldu');
   });
 });
 
@@ -286,5 +300,18 @@ describe('ajan turu', () => {
 
     expect(results.map((r) => r.toolCallId)).toEqual(['x1']);
     expect(results[0].toolStatus).toBe('denied');
+  });
+});
+
+describe('ağ hataları', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('bağlantı kopması anlaşılır bir Türkçe mesaja çevrilir', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      throw new TypeError('Failed to fetch');
+    }));
+    await expect(fetchModels({ baseUrl: 'https://p.example', apiKey: '' })).rejects.toThrow('bağlanılamadı');
   });
 });

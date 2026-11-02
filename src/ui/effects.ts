@@ -2,7 +2,7 @@
 // Küçük etkileşim detayları: imleci izleyen ışık, tıklama noktasından yayılan ışık sızıntısı.
 // Görsel kurallar detail.css'te; burada yalnızca konum bilgisi ve geçici sınıflar üretilir.
 
-const SPOT = '.session-item, .suggestion, .new-chat, .side-footer, .tool-head, .workspace-btn';
+const SPOT = '.session-item, .suggestion, .new-chat, .side-footer, .workspace-btn';
 const PRESS = '.composer, .send-btn, .new-chat, .btn-primary, .btn-ghost, .approval-actions button, .suggestion, .session-item';
 const PRESS_LIFETIME_MS = 720;
 

@@ -487,9 +487,10 @@ function setModelOptions(models: { id: string; name: string }[]): void {
   el.modelSelect.replaceChildren();
 
   if (models.length === 0) {
-    const none = new Option('Model yok', '');
-    none.disabled = true;
-    el.modelSelect.add(none);
+    // Devre dışı seçenek tarayıcıda boş görünüyordu; etkin ve boş değerli tutulur
+    el.modelSelect.add(new Option('Model yok', ''));
+    el.modelSelect.value = '';
+    localStorage.removeItem(MODEL_KEY);
     return;
   }
 
@@ -602,6 +603,11 @@ async function send(rawText: string): Promise<void> {
   await history.addMessage(activeSession.id, { role: 'user', content: text });
   const session = (await history.getSession(activeSession.id))!;
   activeSession = session;
+  if (workspace && session.workspace !== workspace) {
+    // Mevcut bir oturumun klasörü değiştiyse yeniden açıldığında doğru klasör gelsin
+    session.workspace = workspace;
+    await history.updateSession(session.id, { workspace });
+  }
   el.chatTitle.textContent = session.title || 'Yeni sohbet';
   setEmptyVisible(false);
   renderUserMessage(text);
@@ -631,13 +637,18 @@ async function send(rawText: string): Promise<void> {
     async onAssistant(msg) {
       const node = ensureCurrent(view);
       const stored = await history.addMessage(session.id, storedFields(msg));
+      view.current = null;
+      if (!stored.content && !stored.toolCalls?.length) {
+        // Boş adım: görünmeyen bir kutu bırakma
+        node.root.remove();
+        return;
+      }
       node.body.replaceChildren();
       if (stored.content) {
         node.body.innerHTML = renderMarkdown(stored.content);
         decorateCodeBlocks(node.body);
       }
       view.lastRoot = node.root;
-      view.current = null;
       scrollToBottom();
     },
 
@@ -691,9 +702,23 @@ async function send(rawText: string): Promise<void> {
   } finally {
     for (const settle of view.pendingApprovals.values()) settle(false);
     view.pendingApprovals.clear();
-    if (view.current && !view.current.body.textContent?.trim()) view.current.root.remove();
     abortController = null;
     setBusy(false);
+
+    // Yarım kalan yanıt: ekranda görünen metin kalıcı olsun ki yenilemede kaybolmasın
+    if (view.current) {
+      const partial = view.current.streamText?.textContent ?? '';
+      const node = view.current;
+      view.current = null;
+      if (partial.trim()) {
+        const stored = await history.addMessage(session.id, { role: 'assistant', content: partial, model });
+        node.body.innerHTML = renderMarkdown(stored.content);
+        decorateCodeBlocks(node.body);
+        node.root.classList.toggle('is-stopped', controller.signal.aborted);
+      } else {
+        node.root.remove();
+      }
+    }
   }
 
   if (controller.signal.aborted) {
