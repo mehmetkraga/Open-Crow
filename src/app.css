@@ -822,17 +822,20 @@ button:disabled {
 }
 
 .tool-card[data-status="approval"] {
-  border-color: color-mix(in srgb, var(--attention) 60%, var(--border));
+  border-color: var(--attention);
 }
 
+/* Tek satır başlık: durum simgesi + etiket + hedef + durum metni + ok */
 .tool-head {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  min-height: 32px;
   padding: 8px 12px;
   cursor: pointer;
   list-style: none;
   font-size: 13px;
+  line-height: 16px;
   user-select: none;
 }
 
@@ -840,33 +843,88 @@ button:disabled {
   display: none;
 }
 
+.tool-head:focus-visible {
+  outline: 2px solid var(--accent-hover);
+  outline-offset: -2px;
+}
+
+/* Durum simgesi: renge ek olarak şekil ve karakterle de ayırt edilir */
 .tool-head::before {
   content: "";
-  width: 6px;
-  height: 6px;
+  box-sizing: border-box;
   flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--muted);
   border-radius: 50%;
-  background: var(--muted);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .tool-card[data-status="done"] .tool-head::before {
-  background: var(--ok);
+  content: "\2713";
+  border-color: var(--ok);
+  color: var(--ok);
 }
 
-.tool-card[data-status="error"] .tool-head::before,
+.tool-card[data-status="error"] .tool-head::before {
+  content: "!";
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
 .tool-card[data-status="denied"] .tool-head::before {
-  background: var(--danger);
+  content: "\00D7";
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.tool-card[data-status="cancelled"] .tool-head::before {
+  content: "\2013";
 }
 
 .tool-card[data-status="approval"] .tool-head::before {
-  background: var(--attention);
+  content: "?";
+  border-color: var(--attention);
+  color: var(--attention);
 }
 
 .tool-card[data-status="running"] .tool-head::before {
-  animation: blink 1.2s ease-in-out infinite;
+  animation: tool-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes tool-pulse {
+  0%, 100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Açılır ok: açık/kapalı durumu görsel olarak da belli eder */
+.tool-head::after {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin-left: 2px;
+  border-right: 1.5px solid var(--muted);
+  border-bottom: 1.5px solid var(--muted);
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+.tool-card[open] > .tool-head::after {
+  transform: rotate(-135deg);
 }
 
 .tool-label {
+  flex: none;
   color: var(--text-2);
   white-space: nowrap;
 }
@@ -879,12 +937,14 @@ button:disabled {
   text-overflow: ellipsis;
   font-family: var(--mono);
   font-size: 12px;
+  line-height: 16px;
   color: var(--text);
 }
 
 .tool-status {
   flex: none;
   font-size: 12px;
+  line-height: 16px;
   color: var(--muted);
 }
 
@@ -901,6 +961,7 @@ button:disabled {
   color: var(--muted);
 }
 
+/* Sonuç: üst sınırı var, yatay ve dikey kayar, metin seçilebilir */
 .tool-result {
   margin: 0;
   max-height: 240px;
@@ -909,10 +970,17 @@ button:disabled {
   border-top: 1px solid var(--border);
   font-family: var(--mono);
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 16px;
   color: var(--text-2);
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.tool-result:focus-visible,
+.tool-preview:focus-visible {
+  outline: 2px solid var(--accent-hover);
+  outline-offset: -2px;
 }
 
 .tool-approval {
@@ -920,15 +988,27 @@ button:disabled {
   border-top: 1px solid var(--border);
 }
 
+.tool-approval:focus {
+  outline: none;
+}
+
+.tool-approval:focus-visible {
+  outline: 2px solid var(--accent-hover);
+  outline-offset: -2px;
+}
+
 .approval-question {
-  margin: 0 0 2px;
+  margin: 0 0 4px;
   font-size: 13px;
+  line-height: 20px;
   font-weight: 500;
+  color: var(--text);
 }
 
 .approval-where {
-  margin: 0 0 8px;
+  margin: 0 0 4px;
   font-size: 12px;
+  line-height: 16px;
   color: var(--muted);
   font-family: var(--mono);
   overflow: hidden;
@@ -936,9 +1016,16 @@ button:disabled {
   white-space: nowrap;
 }
 
+.approval-kind {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-2);
+}
+
 .tool-preview {
-  margin: 0 0 10px;
-  max-height: 220px;
+  margin: 0 0 12px;
+  max-height: 240px;
   overflow: auto;
   padding: 8px 12px;
   border-radius: var(--radius-sm);
@@ -946,9 +1033,19 @@ button:disabled {
   border: 1px solid var(--border);
   font-family: var(--mono);
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 16px;
+  color: var(--text-2);
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Her satır ayrı blok: renkli arka plan satırın tamamını kaplar */
+.tool-preview .tool-line {
+  display: block;
+}
+
+.tool-preview .tool-more {
+  color: var(--muted);
 }
 
 .tool-preview .add {
@@ -962,13 +1059,18 @@ button:disabled {
 .approval-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 8px;
 }
 
 .approval-actions .btn-primary,
 .approval-actions .btn-ghost {
-  height: 28px;
+  height: 32px;
   padding: 0 12px;
+}
+
+.approval-actions .btn-ghost {
+  border-color: var(--border-strong);
+  color: var(--text-2);
 }
 
 /* ---------- Dar ekran ---------- */
