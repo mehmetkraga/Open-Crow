@@ -20,6 +20,8 @@ export interface ChatMessage {
   toolCallId?: string;
   toolName?: string;
   toolStatus?: ToolStatus;
+  /** tool: dosya değişikliğinden önceki içerik (geri alma için) */
+  checkpoint?: { path: string; before: string | null };
 }
 
 export interface ChatSession {
