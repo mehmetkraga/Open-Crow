@@ -47,6 +47,7 @@
           </button>
           <h1 class="chat-title" id="chatTitle">Yeni sohbet</h1>
           <div class="chat-controls">
+            <button type="button" class="workspace-btn" id="btnInspector" aria-pressed="true" aria-controls="inspector" title="Yan paneli aç/kapat">Panel</button>
             <button type="button" class="workspace-btn" id="workspaceBtn" title="Çalışma klasörü seç">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
               <span id="workspaceName">Klasör seç</span>
@@ -67,6 +68,7 @@
           </div>
         </header>
 
+        <button type="button" class="jump-bottom" id="jumpBottom" hidden>Aşağı in</button>
         <div class="messages" id="messages">
           <div class="empty" id="emptyState">
             <h2 id="emptyTitle">Çalışma klasörü seçilmedi</h2>
@@ -101,6 +103,36 @@
         </p>
         <div class="status-line" id="statusLine" aria-live="off"></div>
       </main>
+
+      <aside class="inspector" id="inspector" aria-label="Oturum paneli">
+        <section class="widget" aria-labelledby="widgetQuickTitle">
+          <h3 class="widget-title" id="widgetQuickTitle">Hızlı eylemler</h3>
+          <div class="quick-actions">
+            <button type="button" class="quick" data-command="ozet">Konuşmayı özetle</button>
+            <button type="button" class="quick" data-command="degisiklikler">Son turdaki değişiklikler</button>
+            <button type="button" class="quick" data-command="geri-al">Son turu geri al</button>
+            <button type="button" class="quick" data-command="yeni">Yeni sohbet</button>
+          </div>
+        </section>
+
+        <section class="widget" aria-labelledby="widgetTodosTitle">
+          <h3 class="widget-title" id="widgetTodosTitle">Yapılacaklar <span class="widget-count" id="todoCount"></span></h3>
+          <ul class="todo-list" id="todoList"></ul>
+        </section>
+
+        <section class="widget" aria-labelledby="widgetFilesTitle">
+          <h3 class="widget-title" id="widgetFilesTitle">Değişen dosyalar <span class="widget-count" id="fileCount"></span></h3>
+          <ul class="file-list" id="fileList"></ul>
+        </section>
+
+        <section class="widget" aria-labelledby="widgetContextTitle">
+          <h3 class="widget-title" id="widgetContextTitle">Bağlam</h3>
+          <div class="meter" role="meter" id="contextMeter" aria-label="Bağlam kullanımı" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="meter-fill" id="contextFill"></div>
+          </div>
+          <p class="widget-text" id="contextText"></p>
+        </section>
+      </aside>
     </div>
 
     <div class="overlay" id="settingsOverlay" hidden>

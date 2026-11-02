@@ -15,6 +15,8 @@ import { loadInstructions, renderInstructions, parseSkill, parseSlashCommand, ma
 import { lastTurn, summarizeTurn, undoTurn } from './agent/checkpoints';
 import { buildConversation, OUTPUT_STYLES, SUMMARY_REQUEST, type OutputStyle } from './agent/context';
 import { allCommands, SHORTCUTS_HELP, type CommandDef } from './ui/commands';
+import { latestTodos, changedFiles, contextUsage, trailingTurnStart } from './agent/insights';
+import type { TodoStatus } from './agent/tools';
 
 const SETTINGS_KEY = 'kraga-ide-settings';
 const MODEL_KEY = 'kraga:model';
@@ -52,6 +54,16 @@ const el = {
   settingsStatus: $<HTMLDivElement>('settingsStatus'),
   commandPalette: $<HTMLDivElement>('commandPalette'),
   statusLine: $<HTMLDivElement>('statusLine'),
+  inspector: $<HTMLElement>('inspector'),
+  btnInspector: $<HTMLButtonElement>('btnInspector'),
+  todoList: $<HTMLUListElement>('todoList'),
+  todoCount: $<HTMLSpanElement>('todoCount'),
+  fileList: $<HTMLUListElement>('fileList'),
+  fileCount: $<HTMLSpanElement>('fileCount'),
+  contextMeter: $<HTMLDivElement>('contextMeter'),
+  contextFill: $<HTMLDivElement>('contextFill'),
+  contextText: $<HTMLParagraphElement>('contextText'),
+  jumpBottom: $<HTMLButtonElement>('jumpBottom'),
 };
 
 type Api = NonNullable<Window['kragaAPI']>;
@@ -434,8 +446,30 @@ function createToolCard(call: { id: string; name: string; arguments: string }): 
   };
 }
 
+/** Mesajın altına kopyala (ve son yanıtta yeniden dene) eylemlerini ekler. */
+function addMessageActions(root: HTMLElement, text: string, retryAvailable: boolean): void {
+  if (!text.trim()) return;
+  const bar = document.createElement('div');
+  bar.className = 'msg-actions';
+  const copy = document.createElement('button');
+  copy.type = 'button';
+  copy.className = 'msg-action';
+  copy.textContent = 'Kopyala';
+  copy.addEventListener('click', () => void copyText(text, 'Yanıt kopyalandı.'));
+  bar.append(copy);
+  if (retryAvailable) {
+    const retry = document.createElement('button');
+    retry.type = 'button';
+    retry.className = 'msg-action';
+    retry.textContent = 'Yeniden dene';
+    retry.addEventListener('click', () => void retryLastTurn());
+    bar.append(retry);
+  }
+  root.appendChild(bar);
+}
+
 /** Kalıcı bir asistan mesajını (metin + araç kartları) ekrana basar. */
-function renderAssistantNode(msg: ChatMessage, results: Map<string, ChatMessage>): void {
+function renderAssistantNode(msg: ChatMessage, results: Map<string, ChatMessage>, isLast: boolean): void {
   const { root, body } = createMessageNode('assistant');
   if (msg.content) {
     body.innerHTML = renderMarkdown(msg.content);
@@ -452,12 +486,14 @@ function renderAssistantNode(msg: ChatMessage, results: Map<string, ChatMessage>
     }
     root.appendChild(card.root);
   }
+  addMessageActions(root, msg.content, isLast);
 }
 
 function renderTranscript(session: ChatSession | null): void {
   el.messages.querySelectorAll('.msg').forEach((node) => node.remove());
   if (!session || session.messages.length === 0) {
     setEmptyVisible(true);
+    renderInspector();
     return;
   }
   setEmptyVisible(false);
@@ -466,11 +502,13 @@ function renderTranscript(session: ChatSession | null): void {
   for (const msg of session.messages) {
     if (msg.role === 'tool' && msg.toolCallId) results.set(msg.toolCallId, msg);
   }
-  for (const msg of session.messages) {
+  const lastAssistant = session.messages.map((m) => m.role).lastIndexOf('assistant');
+  session.messages.forEach((msg, index) => {
     if (msg.role === 'user') renderUserMessage(msg.content);
-    else if (msg.role === 'assistant') renderAssistantNode(msg, results);
-  }
+    else if (msg.role === 'assistant') renderAssistantNode(msg, results, index === lastAssistant);
+  });
   scrollToBottom(true);
+  renderInspector();
 }
 
 // ---------- Oturum listesi ----------
@@ -656,6 +694,8 @@ function setBusy(busy: boolean): void {
   el.iconStop.toggleAttribute('hidden', !busy);
   el.workspaceBtn.disabled = busy;
   syncSendButton();
+  if (busy) startBusyClock();
+  else stopBusyClock();
 }
 
 /** Meşgulken durdur düğmesi her zaman etkin; boşta metin yoksa gönder devre dışı. */
@@ -705,7 +745,7 @@ function cardFor(view: TurnView, id: string, name: string): ToolCard {
   return card;
 }
 
-async function send(rawText: string): Promise<void> {
+async function send(rawText: string, retry = false): Promise<void> {
   const text = rawText.trim();
   if (!text || abortController) return;
 
@@ -734,7 +774,9 @@ async function send(rawText: string): Promise<void> {
   if (isFirstMessage) {
     await history.autoTitle(activeSession.id, text);
   }
-  await history.addMessage(activeSession.id, { role: 'user', content: text });
+  if (!retry) {
+    await history.addMessage(activeSession.id, { role: 'user', content: text });
+  }
   const session = (await history.getSession(activeSession.id))!;
   activeSession = session;
   if (workspace && session.workspace !== workspace) {
@@ -744,7 +786,7 @@ async function send(rawText: string): Promise<void> {
   }
   el.chatTitle.textContent = session.title || 'Yeni sohbet';
   setEmptyVisible(false);
-  renderUserMessage(text);
+  if (!retry) renderUserMessage(text);
   scrollToBottom(true);
 
   await refreshProjectContext();
@@ -878,6 +920,9 @@ async function send(rawText: string): Promise<void> {
   }
   const next = queued.shift();
 
+  // Tur bitti: kalıcı veriden yeniden çiz ki mesaj eylemleri ve kartlar doğru sırada dursun
+  activeSession = (await history.getSession(session.id)) ?? activeSession;
+  renderTranscript(activeSession);
   updateStatusLine();
   await refreshSessionList();
   el.input.focus();
@@ -1042,7 +1087,8 @@ function updateStatusLine(): void {
   const model = el.modelSelect.value || 'model yok';
   const messageCount = activeSession?.messages.length ?? 0;
   const folder = workspace ? folderName(workspace) : 'klasör yok';
-  el.statusLine.textContent = `${model} · ${MODE_LABEL[approvalMode()]} · ${folder} · ${messageCount} mesaj · ${activeRules().length} kural`;
+  const clock = busyTicker !== undefined ? `Çalışıyor · ${Math.floor((Date.now() - busySince) / 1000)} sn · ` : '';
+  el.statusLine.textContent = `${clock}${model} · ${MODE_LABEL[approvalMode()]} · ${folder} · ${messageCount} mesaj · ${activeRules().length} kural`;
 }
 
 // ---------- Komutlar ----------
@@ -1347,6 +1393,122 @@ function choosePalette(index: number): void {
   void runCommand(item.name, '');
 }
 
+// ---------- Yan panel, çalışma süresi, yeniden dene ----------
+
+const INSPECTOR_KEY = 'oc:inspector';
+const CONTEXT_LIMIT = 128000;
+const TODO_MARK: Record<TodoStatus, string> = { pending: '○', in_progress: '◐', completed: '●' };
+let busySince = 0;
+let busyTicker: number | undefined;
+
+function emptyItem(text: string): HTMLLIElement {
+  const li = document.createElement('li');
+  li.className = 'widget-empty';
+  li.textContent = text;
+  return li;
+}
+
+function formatTokens(value: number): string {
+  return value >= 1000 ? `${Math.round(value / 1000)}K` : String(value);
+}
+
+/** Yan paneli sohbetin verisiyle yeniden çizer: yapılacaklar, değişen dosyalar, bağlam kullanımı. */
+function renderInspector(): void {
+  const messages = activeSession?.messages ?? [];
+
+  const todos = latestTodos(messages);
+  const done = todos.filter((t) => t.status === 'completed').length;
+  el.todoCount.textContent = todos.length ? `${done}/${todos.length}` : '';
+  el.todoList.replaceChildren(
+    ...(todos.length
+      ? todos.map((todo) => {
+          const li = document.createElement('li');
+          li.className = `todo-item is-${todo.status}`;
+          const mark = document.createElement('span');
+          mark.className = 'todo-mark';
+          mark.setAttribute('aria-hidden', 'true');
+          mark.textContent = TODO_MARK[todo.status];
+          const text = document.createElement('span');
+          text.textContent = todo.content;
+          li.append(mark, text);
+          return li;
+        })
+      : [emptyItem('Henüz liste yok')]),
+  );
+
+  const files = changedFiles(messages);
+  el.fileCount.textContent = files.length ? String(files.length) : '';
+  el.fileList.replaceChildren(
+    ...(files.length
+      ? files.map((file) => {
+          const li = document.createElement('li');
+          li.className = 'file-item';
+          li.title = file.path;
+          const name = document.createElement('span');
+          name.className = 'file-name';
+          name.textContent = file.path.split(/[\\/]/).pop() ?? file.path;
+          const kind = document.createElement('span');
+          kind.className = 'file-kind';
+          kind.textContent = file.kind === 'created' ? 'yeni' : 'değişti';
+          li.append(name, kind);
+          return li;
+        })
+      : [emptyItem('Bu oturumda değişiklik yok')]),
+  );
+
+  const usage = contextUsage(messages, [buildSystemExtra()], CONTEXT_LIMIT);
+  const percent = Math.round(usage.ratio * 100);
+  el.contextFill.style.width = `${percent}%`;
+  el.contextMeter.setAttribute('aria-valuenow', String(percent));
+  el.contextText.textContent = `Yaklaşık ${formatTokens(usage.used)} / ${formatTokens(usage.limit)} token (tahmini)`;
+}
+
+function setInspector(open: boolean): void {
+  el.inspector.hidden = !open;
+  el.btnInspector.setAttribute('aria-pressed', String(open));
+  document.querySelector('.shell')?.classList.toggle('no-inspector', !open);
+  localStorage.setItem(INSPECTOR_KEY, open ? '1' : '0');
+}
+
+function startBusyClock(): void {
+  busySince = Date.now();
+  window.clearInterval(busyTicker);
+  busyTicker = window.setInterval(updateStatusLine, 1000);
+}
+
+function stopBusyClock(): void {
+  window.clearInterval(busyTicker);
+  busyTicker = undefined;
+}
+
+/** Son kullanıcı mesajından yeniden başlar: sondaki yanıt ve araç çıktıları silinir, mesaj yeniden gönderilir. */
+async function retryLastTurn(): Promise<void> {
+  if (!activeSession || abortController) return;
+  const session = (await history.getSession(activeSession.id)) ?? activeSession;
+  const start = trailingTurnStart(session.messages);
+  if (start < 0) return;
+  await history.updateSession(session.id, { messages: session.messages.slice(0, start + 1) });
+  activeSession = (await history.getSession(session.id)) ?? null;
+  renderTranscript(activeSession);
+  await send(session.messages[start].content, true);
+}
+
+el.btnInspector.addEventListener('click', () => setInspector(el.inspector.hidden));
+
+document.querySelectorAll<HTMLButtonElement>('.quick').forEach((button) => {
+  button.addEventListener('click', () => void runCommand(button.dataset.command ?? '', ''));
+});
+
+// Yukarıda kaldıysan "aşağı in" düğmesi görünür
+el.messages.addEventListener(
+  'scroll',
+  () => {
+    el.jumpBottom.hidden = isNearBottom();
+  },
+  { passive: true },
+);
+el.jumpBottom.addEventListener('click', () => scrollToBottom(true));
+
 // ---------- Girdi alanı ----------
 
 function autoResize(): void {
@@ -1557,6 +1719,7 @@ $<HTMLButtonElement>('btnClose').addEventListener('click', () => api()?.app.clos
 
 async function init(): Promise<void> {
   updateWorkspaceUi();
+  setInspector(localStorage.getItem(INSPECTOR_KEY) !== '0');
   await refreshProjectContext();
   updateStatusLine();
   await refreshSessionList();
