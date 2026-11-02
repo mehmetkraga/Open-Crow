@@ -7,14 +7,22 @@ import { initEffects } from './ui/effects';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { ChatHistoryManager, type ChatMessage, type ChatSession, type ToolCall, type ToolStatus } from './core/ChatHistory';
-import { fetchModels, type ProviderConfig } from './agent/openai';
-import { runAgentTurn, type AgentEvents } from './agent/loop';
+import { fetchModels, streamChatCompletion, type ApiMessage, type ProviderConfig } from './agent/openai';
+import { runAgentTurn, toApiMessage, type AgentEvents } from './agent/loop';
 import { summarizeCall, type ApprovalMode, type ToolBackend } from './agent/tools';
+import { CANONICAL_TOOL, allowRuleFor, formatRule, parseRule, rulesFromSettings, type PermissionRule } from './agent/permissions';
+import { loadInstructions, renderInstructions, parseSkill, parseSlashCommand, matchCommands, type LoadedInstruction, type SkillDefinition } from './agent/instructions';
+import { lastTurn, summarizeTurn, undoTurn } from './agent/checkpoints';
+import { buildConversation, OUTPUT_STYLES, SUMMARY_REQUEST, type OutputStyle } from './agent/context';
+import { allCommands, SHORTCUTS_HELP, type CommandDef } from './ui/commands';
 
 const SETTINGS_KEY = 'kraga-ide-settings';
 const MODEL_KEY = 'kraga:model';
 const MODE_KEY = 'oc:mode';
 const WORKSPACE_KEY = 'oc:lastWorkspace';
+const STYLE_KEY = 'oc:style';
+const INIT_PROMPT =
+  'Bu proje için kök dizinde OPENCROW.md dosyası oluştur. Önce proje yapısını incele (README, paket dosyaları, ana kaynak klasörleri), sonra derleme ve test komutlarını, kod stilini ve önemli kuralları yaz. Kısa ve madde madde olsun. Dosyayı yazmadan önce içeriğini özetle.';
 
 const history = new ChatHistoryManager();
 
@@ -42,6 +50,8 @@ const el = {
   setBaseUrl: $<HTMLInputElement>('setBaseUrl'),
   setApiKey: $<HTMLInputElement>('setApiKey'),
   settingsStatus: $<HTMLDivElement>('settingsStatus'),
+  commandPalette: $<HTMLDivElement>('commandPalette'),
+  statusLine: $<HTMLDivElement>('statusLine'),
 };
 
 type Api = NonNullable<Window['kragaAPI']>;
@@ -75,9 +85,29 @@ function hasProvider(): boolean {
   return Boolean(readSettings().baseUrl);
 }
 
+const MODE_ORDER: ApprovalMode[] = ['ask', 'edits', 'plan', 'auto'];
+const MODE_LABEL: Record<ApprovalMode, string> = {
+  ask: 'Her değişikliği sor',
+  edits: 'Düzenlemeleri otomatik onayla',
+  plan: 'Plan (yalnızca oku)',
+  auto: 'Her şeyi otomatik onayla',
+};
+
 function approvalMode(): ApprovalMode {
-  const saved = localStorage.getItem(MODE_KEY);
-  return saved === 'edits' || saved === 'auto' ? saved : 'ask';
+  const saved = localStorage.getItem(MODE_KEY) as ApprovalMode | null;
+  return saved && MODE_ORDER.includes(saved) ? saved : 'ask';
+}
+
+function setMode(mode: ApprovalMode): void {
+  localStorage.setItem(MODE_KEY, mode);
+  el.modeSelect.value = mode;
+  updateStatusLine();
+}
+
+function cycleMode(): void {
+  const next = MODE_ORDER[(MODE_ORDER.indexOf(approvalMode()) + 1) % MODE_ORDER.length];
+  setMode(next);
+  showNotice(`Onay modu: ${MODE_LABEL[next]}`);
 }
 
 // ---------- Bildirim şeridi ----------
@@ -216,7 +246,7 @@ interface ToolCard {
   root: HTMLDetailsElement;
   setStatus(status: CardStatus): void;
   setResult(text: string): void;
-  askApproval(call: ToolCall, args: Record<string, unknown>, onDecision: (approved: boolean) => void): void;
+  askApproval(call: ToolCall, args: Record<string, unknown>, onDecision: (approved: boolean) => void, onAlwaysAllow?: () => void): void;
   clearApproval(): void;
 }
 
@@ -344,7 +374,7 @@ function createToolCard(call: { id: string; name: string; arguments: string }): 
       approval.hidden = true;
       approval.replaceChildren();
     },
-    askApproval(c, a, onDecision) {
+    askApproval(c, a, onDecision, onAlwaysAllow) {
       approval.replaceChildren();
       approval.hidden = false;
       root.open = true;
@@ -380,7 +410,21 @@ function createToolCard(call: { id: string; name: string; arguments: string }): 
       };
       deny.addEventListener('click', () => decide(false));
       allow.addEventListener('click', () => decide(true));
-      buttons.append(deny, allow);
+      const canRemember = onAlwaysAllow !== undefined && allowRuleFor(CANONICAL_TOOL[c.name] ?? c.name, a) !== null;
+      if (canRemember) {
+        const always = document.createElement('button');
+        always.type = 'button';
+        always.className = 'btn-ghost';
+        always.textContent = 'Hep izin ver';
+        always.title = 'Bu kalıp için kalıcı kural ekle; bir daha sorulmaz';
+        always.addEventListener('click', () => {
+          summary.focus();
+          onAlwaysAllow?.();
+        });
+        buttons.append(deny, always, allow);
+      } else {
+        buttons.append(deny, allow);
+      }
 
       parts.push(approvalPreview(c.name, a), buttons);
       approval.setAttribute('aria-label', question);
@@ -545,6 +589,7 @@ function setWorkspace(path: string | null, persistGlobal = true): void {
   workspace = path;
   if (path) localStorage.setItem(WORKSPACE_KEY, path);
   updateWorkspaceUi();
+  void refreshProjectContext().then(updateStatusLine);
   if (persistGlobal && activeSession && activeSession.workspace !== path) {
     activeSession.workspace = path ?? undefined;
     void history.updateSession(activeSession.id, { workspace: path ?? undefined });
@@ -609,7 +654,6 @@ function setBusy(busy: boolean): void {
   el.sendBtn.setAttribute('aria-label', busy ? 'Durdur' : 'Gönder');
   el.iconSend.toggleAttribute('hidden', busy);
   el.iconStop.toggleAttribute('hidden', !busy);
-  el.input.disabled = busy;
   el.workspaceBtn.disabled = busy;
   syncSendButton();
 }
@@ -647,6 +691,7 @@ function storedFields(msg: ChatMessage) {
     toolCallId: msg.toolCallId,
     toolName: msg.toolName,
     toolStatus: msg.toolStatus,
+    checkpoint: msg.checkpoint,
   };
 }
 
@@ -702,7 +747,8 @@ async function send(rawText: string): Promise<void> {
   renderUserMessage(text);
   scrollToBottom(true);
 
-  const conversation = session.messages;
+  await refreshProjectContext();
+  const conversation = buildConversation(session);
   const kragaAPI = api();
   const controller = new AbortController();
   abortController = controller;
@@ -759,7 +805,12 @@ async function send(rawText: string): Promise<void> {
           resolve(approved);
         };
         view.pendingApprovals.set(call.id, settle);
-        card?.askApproval(call, parseArgs(call.arguments), settle);
+        const args = parseArgs(call.arguments);
+        card?.askApproval(call, args, settle, () => {
+          const rule = allowRuleFor(CANONICAL_TOOL[call.name] ?? call.name, args);
+          if (rule) rememberAllow(rule);
+          settle(true);
+        });
         scrollToBottom();
       });
     },
@@ -785,6 +836,8 @@ async function send(rawText: string): Promise<void> {
         mode: approvalMode(),
         backend: kragaAPI ? makeBackend(kragaAPI) : offlineBackend(),
         signal: controller.signal,
+        rules: activeRules(),
+        systemExtra: buildSystemExtra(),
       },
     );
   } catch (err) {
@@ -819,8 +872,16 @@ async function send(rawText: string): Promise<void> {
     showNotice(failure, 'error', 9000);
   }
 
+  // Sıraya alınmış mesajlar: durdurulduysa sıra temizlenir, aksi halde sırayla gönderilir
+  if (controller.signal.aborted) {
+    queued = [];
+  }
+  const next = queued.shift();
+
+  updateStatusLine();
   await refreshSessionList();
   el.input.focus();
+  if (next) void send(next);
 }
 
 function offlineBackend(): ToolBackend {
@@ -835,6 +896,7 @@ function offlineBackend(): ToolBackend {
     glob: fail,
     runCommand: fail,
     fetchUrl: fail,
+    search: fail,
   };
 }
 
@@ -847,7 +909,442 @@ function makeBackend(kragaAPI: Api): ToolBackend {
     glob: (root, pattern, limit) => kragaAPI.workspace.glob(root, pattern, limit),
     runCommand: (command, cwd) => kragaAPI.terminal.runCommand(command, cwd),
     fetchUrl: (url, maxChars) => kragaAPI.web.fetch(url, maxChars),
+    search: (query, limit) => kragaAPI.web.search(query, limit),
   };
+}
+
+// ---------- Proje bağlamı: kurallar, talimatlar, beceriler, stil ----------
+
+let rules: PermissionRule[] = [];
+let sessionRules: PermissionRule[] = [];
+let instructions: LoadedInstruction[] = [];
+let skills: SkillDefinition[] = [];
+let queued: string[] = [];
+
+function pathSep(): string {
+  return workspace && workspace.includes('\\') ? '\\' : '/';
+}
+
+/** Çalışma klasörü altında göreli bir yol kurar; ayırıcıyı klasörün kendi ayırıcısına uydurur. */
+function workspacePath(...parts: string[]): string {
+  const sep = pathSep();
+  const relative = parts.join('/').split('/').filter(Boolean).join(sep);
+  return `${workspace ?? ''}${sep}${relative}`;
+}
+
+function rulesKey(): string {
+  return `oc:allow:${workspace ?? ''}`;
+}
+
+function loadSessionRules(): void {
+  sessionRules = [];
+  if (!workspace) return;
+  try {
+    const saved = JSON.parse(localStorage.getItem(rulesKey()) || '[]') as unknown;
+    if (Array.isArray(saved)) {
+      sessionRules = saved
+        .filter((text): text is string => typeof text === 'string')
+        .map((text) => parseRule(text, 'allow'))
+        .filter((rule): rule is PermissionRule => rule !== null);
+    }
+  } catch {
+    sessionRules = [];
+  }
+}
+
+/** "Hep izin ver" seçimini kalıcı kural olarak kaydeder. */
+function rememberAllow(rule: PermissionRule): void {
+  sessionRules.push(rule);
+  try {
+    const saved = JSON.parse(localStorage.getItem(rulesKey()) || '[]') as string[];
+    localStorage.setItem(rulesKey(), JSON.stringify([...saved, formatRule(rule)]));
+  } catch {
+    // Kalıcılık başarısızsa kural bu oturum boyunca geçerli kalır
+  }
+  showNotice(`Kalıcı izin kuralı eklendi: ${formatRule(rule)}`);
+  updateStatusLine();
+}
+
+function activeRules(): PermissionRule[] {
+  return [...rules, ...sessionRules];
+}
+
+async function loadSkills(kragaAPI: Api): Promise<SkillDefinition[]> {
+  if (!workspace) return [];
+  const dir = workspacePath('.opencrow', 'skills');
+  let entries: { name: string; isDirectory: boolean }[];
+  try {
+    entries = await kragaAPI.fs.readDirectory(dir);
+  } catch {
+    return [];
+  }
+  const found: SkillDefinition[] = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory) continue;
+    try {
+      const source = await kragaAPI.fs.readFile(`${dir}${pathSep()}${entry.name}${pathSep()}SKILL.md`);
+      found.push(parseSkill(source, entry.name));
+    } catch {
+      // SKILL.md yoksa bu klasör beceri değildir
+    }
+  }
+  return found;
+}
+
+/** Kural, talimat ve beceri dosyalarını çalışma klasöründen yeniden okur. Her turdan önce çağrılır. */
+async function refreshProjectContext(): Promise<void> {
+  loadSessionRules();
+  const kragaAPI = api();
+  if (!kragaAPI || !workspace) {
+    rules = [];
+    instructions = [];
+    skills = [];
+    return;
+  }
+  const readText = async (...parts: string[]): Promise<string | null> => {
+    try {
+      return await kragaAPI.fs.readFile(workspacePath(...parts));
+    } catch {
+      return null;
+    }
+  };
+  instructions = await loadInstructions((file) => readText(file));
+  const settingsText = await readText('.opencrow', 'settings.json');
+  let settings: unknown = null;
+  try {
+    settings = settingsText ? JSON.parse(settingsText) : null;
+  } catch {
+    settings = null;
+  }
+  rules = rulesFromSettings(settings);
+  skills = await loadSkills(kragaAPI);
+}
+
+function outputStyle(): OutputStyle {
+  const saved = localStorage.getItem(STYLE_KEY);
+  return saved === 'concise' || saved === 'explanatory' ? saved : 'normal';
+}
+
+/** Sistem istemine eklenecek metin: proje talimatları, beceri listesi ve yanıt stili. */
+function buildSystemExtra(): string {
+  const parts: string[] = [];
+  const instructionText = renderInstructions(instructions);
+  if (instructionText) parts.push(instructionText);
+  if (skills.length > 0) {
+    parts.push(`Beceriler (kullanıcı /ad ile çağırabilir):\n${skills.map((s) => `- ${s.name}: ${s.description}`).join('\n')}`);
+  }
+  const style = OUTPUT_STYLES[outputStyle()];
+  if (style) parts.push(style);
+  return parts.join('\n\n');
+}
+
+function updateStatusLine(): void {
+  const model = el.modelSelect.value || 'model yok';
+  const messageCount = activeSession?.messages.length ?? 0;
+  const folder = workspace ? folderName(workspace) : 'klasör yok';
+  el.statusLine.textContent = `${model} · ${MODE_LABEL[approvalMode()]} · ${folder} · ${messageCount} mesaj · ${activeRules().length} kural`;
+}
+
+// ---------- Komutlar ----------
+
+function lastAssistantText(): string {
+  const messages = activeSession?.messages ?? [];
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role === 'assistant' && messages[i].content.trim()) return messages[i].content;
+  }
+  return '';
+}
+
+function transcriptMarkdown(): string {
+  const parts: string[] = [];
+  for (const msg of activeSession?.messages ?? []) {
+    if (msg.role === 'user') parts.push(`## Sen\n\n${msg.content}`);
+    else if (msg.role === 'assistant' && msg.content.trim()) parts.push(`## Open Crow\n\n${msg.content}`);
+  }
+  return parts.join('\n\n');
+}
+
+async function copyText(text: string, done: string): Promise<void> {
+  if (!text.trim()) {
+    showNotice('Kopyalanacak içerik yok.');
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    showNotice(done);
+  } catch {
+    showNotice('Panoya kopyalanamadı.', 'error');
+  }
+}
+
+async function showChanges(): Promise<void> {
+  if (!activeSession) {
+    showNotice('Henüz bir sohbet yok.');
+    return;
+  }
+  const session = (await history.getSession(activeSession.id)) ?? activeSession;
+  const changes = summarizeTurn(session.messages, lastTurn(session.messages));
+  if (changes.length === 0) {
+    showNotice('Son turda dosya değişikliği yok.');
+    return;
+  }
+  const list = changes.map((c) => `${c.path} (${c.kind === 'created' ? 'yeni' : 'değişti'})`).join(' · ');
+  showNotice(`Son turda ${changes.length} dosya: ${list}`, 'info', 12000);
+}
+
+/** Son turdaki dosya değişikliklerini denetim noktalarından geri alır. */
+async function undoLastTurn(): Promise<void> {
+  const kragaAPI = api();
+  if (!activeSession || abortController) return;
+  if (!kragaAPI) {
+    showNotice('Geri alma yalnızca masaüstü uygulamasında çalışır.', 'error');
+    return;
+  }
+  const session = (await history.getSession(activeSession.id)) ?? activeSession;
+  const turn = lastTurn(session.messages);
+  const pending = summarizeTurn(session.messages, turn);
+  if (pending.length === 0) {
+    showNotice('Geri alınacak dosya değişikliği yok.');
+    return;
+  }
+  if (!window.confirm(`Son turdaki ${pending.length} dosya değişikliği geri alınsın mı?`)) return;
+  try {
+    const restored = await undoTurn(session.messages, turn, {
+      write: async (path, content) => {
+        await kragaAPI.fs.writeFile(path, content);
+      },
+      remove: async (path) => {
+        await kragaAPI.fs.deletePath(path);
+      },
+    });
+    await history.addMessage(session.id, { role: 'system', content: `Son tur geri alındı: ${restored.map((r) => r.path).join(', ')}` });
+    showNotice(`${restored.length} dosya geri alındı.`);
+  } catch (err) {
+    showNotice(`Geri alma başarısız: ${err instanceof Error ? err.message : String(err)}`, 'error', 9000);
+  }
+  activeSession = (await history.getSession(session.id)) ?? null;
+  renderTranscript(activeSession ?? null);
+  updateStatusLine();
+}
+
+/** Konuşmayı modele özetletir; sonraki istekler özet + son mesajlarla gider. */
+async function compactSession(): Promise<void> {
+  if (!activeSession || abortController) return;
+  if (!hasProvider()) {
+    showNotice('Önce sağlayıcı ayarlarını tamamla.', 'error');
+    return;
+  }
+  const model = el.modelSelect.value || localStorage.getItem(MODEL_KEY) || '';
+  if (!model) {
+    showNotice('Bir model seç.', 'error');
+    return;
+  }
+  const session = (await history.getSession(activeSession.id)) ?? activeSession;
+  if (session.messages.length < 4) {
+    showNotice('Özetlenecek kadar mesaj yok.');
+    return;
+  }
+  const controller = new AbortController();
+  abortController = controller;
+  setBusy(true);
+  showNotice('Konuşma özetleniyor…', 'info', 60000);
+  try {
+    const messages: ApiMessage[] = [
+      { role: 'system', content: 'Sen bir konuşma özetleyicisisin.' },
+      ...buildConversation(session).map(toApiMessage),
+      { role: 'user', content: SUMMARY_REQUEST },
+    ];
+    const result = await streamChatCompletion(readSettings(), { model, messages }, { signal: controller.signal });
+    const summary = result.content.trim();
+    if (!summary) throw new Error('Özet boş döndü.');
+    await history.updateSession(session.id, { summary, summaryUpTo: session.messages.length });
+    activeSession = (await history.getSession(session.id)) ?? null;
+    showNotice(`Konuşma özetlendi (${session.messages.length} mesaj). Sonraki istekler özetle devam eder.`, 'info', 7000);
+  } catch (err) {
+    if (!controller.signal.aborted) {
+      showNotice(err instanceof Error ? err.message : 'Özetleme başarısız.', 'error', 9000);
+    }
+  } finally {
+    abortController = null;
+    setBusy(false);
+    updateStatusLine();
+  }
+}
+
+function skillPrompt(skill: SkillDefinition, args: string): string {
+  return `Beceri "${skill.name}" çağrıldı. Aşağıdaki yönergeleri uygula.\n\n${skill.body}${args ? `\n\nİstek: ${args}` : ''}`;
+}
+
+/** Slash komutunu çalıştırır. Bilinmeyen komut bildirim olarak gösterilir. */
+async function runCommand(name: string, args: string): Promise<void> {
+  const skill = skills.find((s) => s.name === name);
+  if (skill) {
+    await send(skillPrompt(skill, args));
+    return;
+  }
+  switch (name) {
+    case 'yeni':
+    case 'temizle':
+      startNewChat();
+      return;
+    case 'model': {
+      if (!args) {
+        el.modelSelect.focus();
+        return;
+      }
+      const match = [...el.modelSelect.options].find(
+        (o) => !o.disabled && (o.value === args || o.text.toLowerCase().includes(args.toLowerCase())),
+      );
+      if (!match) {
+        showNotice(`Model bulunamadı: ${args}`, 'error');
+        return;
+      }
+      el.modelSelect.value = match.value;
+      localStorage.setItem(MODEL_KEY, match.value);
+      updateStatusLine();
+      showNotice(`Model: ${match.text}`);
+      return;
+    }
+    case 'mod': {
+      if (!args) {
+        cycleMode();
+        return;
+      }
+      if (!MODE_ORDER.includes(args as ApprovalMode)) {
+        showNotice('Geçerli modlar: plan, ask, edits, auto', 'error');
+        return;
+      }
+      setMode(args as ApprovalMode);
+      showNotice(`Onay modu: ${MODE_LABEL[args as ApprovalMode]}`);
+      return;
+    }
+    case 'stil': {
+      if (!args) {
+        showNotice(`Yanıt stili: ${outputStyle()} (normal, concise, explanatory)`);
+        return;
+      }
+      if (!(args in OUTPUT_STYLES)) {
+        showNotice('Geçerli stiller: normal, concise, explanatory', 'error');
+        return;
+      }
+      localStorage.setItem(STYLE_KEY, args);
+      showNotice(`Yanıt stili: ${args}`);
+      return;
+    }
+    case 'klasor':
+      await pickWorkspace();
+      return;
+    case 'init':
+      await send(INIT_PROMPT);
+      return;
+    case 'bellek': {
+      const files = instructions.map((i) => i.file).join(', ') || 'yok';
+      showNotice(`Talimatlar: ${files} · İzin kuralları: ${rules.length} proje, ${sessionRules.length} kayıtlı`, 'info', 9000);
+      return;
+    }
+    case 'beceriler': {
+      const list = skills.map((s) => s.name).join(', ') || 'yok (.opencrow/skills/<ad>/SKILL.md)';
+      showNotice(`Beceriler: ${list}`, 'info', 9000);
+      return;
+    }
+    case 'ozet':
+      await compactSession();
+      return;
+    case 'degisiklikler':
+      await showChanges();
+      return;
+    case 'geri-al':
+      await undoLastTurn();
+      return;
+    case 'kopyala':
+      await copyText(lastAssistantText(), 'Son yanıt panoya kopyalandı.');
+      return;
+    case 'aktar':
+      await copyText(transcriptMarkdown(), 'Sohbet panoya kopyalandı.');
+      return;
+    case 'yardim':
+      showNotice(SHORTCUTS_HELP, 'info', 12000);
+      return;
+    default:
+      showNotice(`Bilinmeyen komut: /${name}. Komutları görmek için / yaz.`, 'error');
+  }
+}
+
+// ---------- Komut paleti ----------
+
+let paletteItems: CommandDef[] = [];
+let paletteIndex = 0;
+
+/** Girdi yalnızca "/ad" biçimindeyse (boşluk yoksa) komut adını döndürür; değilse null. */
+function paletteQuery(): string | null {
+  const value = el.input.value;
+  if (!value.startsWith('/') || /\s/.test(value)) return null;
+  return value.slice(1);
+}
+
+function hidePalette(): void {
+  el.commandPalette.hidden = true;
+  paletteItems = [];
+  paletteIndex = 0;
+}
+
+function renderPalette(): void {
+  el.commandPalette.replaceChildren(
+    ...paletteItems.map((item, index) => {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'palette-item';
+      row.setAttribute('role', 'option');
+      row.setAttribute('aria-selected', String(index === paletteIndex));
+      row.classList.toggle('is-active', index === paletteIndex);
+      const name = document.createElement('span');
+      name.className = 'palette-name';
+      name.textContent = `/${item.name}${item.argHint ? ` ${item.argHint}` : ''}`;
+      const desc = document.createElement('span');
+      desc.className = 'palette-desc';
+      desc.textContent = item.description;
+      row.append(name, desc);
+      row.addEventListener('mousedown', (event) => {
+        event.preventDefault();
+        choosePalette(index);
+      });
+      return row;
+    }),
+  );
+  el.commandPalette.querySelector<HTMLElement>('.is-active')?.scrollIntoView({ block: 'nearest' });
+}
+
+function refreshPalette(): void {
+  const query = paletteQuery();
+  if (query === null) {
+    hidePalette();
+    return;
+  }
+  paletteItems = matchCommands(query, allCommands(skills)).slice(0, 10);
+  if (paletteItems.length === 0) {
+    hidePalette();
+    return;
+  }
+  paletteIndex = Math.min(paletteIndex, paletteItems.length - 1);
+  el.commandPalette.hidden = false;
+  renderPalette();
+}
+
+/** Seçilen komutu çalıştırır; argüman bekleyen komut metne eklenir. */
+function choosePalette(index: number): void {
+  const item = paletteItems[index];
+  if (!item) return;
+  if (item.argHint) {
+    el.input.value = `/${item.name} `;
+    autoResize();
+    hidePalette();
+    el.input.focus();
+    return;
+  }
+  el.input.value = '';
+  autoResize();
+  hidePalette();
+  void runCommand(item.name, '');
 }
 
 // ---------- Girdi alanı ----------
@@ -858,8 +1355,38 @@ function autoResize(): void {
   syncSendButton();
 }
 
-el.input.addEventListener('input', autoResize);
+el.input.addEventListener('input', () => {
+  autoResize();
+  paletteIndex = 0;
+  refreshPalette();
+});
+
 el.input.addEventListener('keydown', (event) => {
+  const paletteOpen = !el.commandPalette.hidden && paletteItems.length > 0;
+  if (paletteOpen) {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const step = event.key === 'ArrowDown' ? 1 : -1;
+      paletteIndex = (paletteIndex + step + paletteItems.length) % paletteItems.length;
+      renderPalette();
+      return;
+    }
+    if ((event.key === 'Tab' && !event.shiftKey) || (event.key === 'Enter' && !event.shiftKey && !event.isComposing)) {
+      event.preventDefault();
+      choosePalette(paletteIndex);
+      return;
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      hidePalette();
+      return;
+    }
+  }
+  if (event.key === 'Tab' && event.shiftKey) {
+    event.preventDefault();
+    cycleMode();
+    return;
+  }
   if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
     event.preventDefault();
     el.composer.requestSubmit();
@@ -868,11 +1395,39 @@ el.input.addEventListener('keydown', (event) => {
 
 el.composer.addEventListener('submit', (event) => {
   event.preventDefault();
+  const text = el.input.value.trim();
   if (abortController) {
+    // Meşgulken metin varsa sıraya al; düğmeyle gönderim yanıtı durdurur
+    if (text && (event as SubmitEvent).submitter !== el.sendBtn) {
+      queued.push(text);
+      el.input.value = '';
+      autoResize();
+      showNotice(`Sıraya eklendi (${queued.length}). Yanıt bitince gönderilecek.`);
+      return;
+    }
     abortController.abort();
     return;
   }
+  const command = text.startsWith('/') ? parseSlashCommand(text) : null;
+  if (command) {
+    el.input.value = '';
+    autoResize();
+    hidePalette();
+    void runCommand(command.name, command.args);
+    return;
+  }
   void send(el.input.value);
+});
+
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && abortController && el.settingsOverlay.hidden && el.commandPalette.hidden) {
+    abortController.abort();
+    return;
+  }
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'n' && !abortController) {
+    event.preventDefault();
+    startNewChat();
+  }
 });
 
 document.querySelectorAll<HTMLButtonElement>('.suggestion').forEach((button) => {
@@ -885,11 +1440,12 @@ document.querySelectorAll<HTMLButtonElement>('.suggestion').forEach((button) => 
 
 el.modelSelect.addEventListener('change', () => {
   localStorage.setItem(MODEL_KEY, el.modelSelect.value);
+  updateStatusLine();
 });
 
 el.modeSelect.value = approvalMode();
 el.modeSelect.addEventListener('change', () => {
-  localStorage.setItem(MODE_KEY, el.modeSelect.value);
+  setMode(el.modeSelect.value as ApprovalMode);
 });
 
 el.workspaceBtn.addEventListener('click', () => void pickWorkspace());
@@ -1001,6 +1557,8 @@ $<HTMLButtonElement>('btnClose').addEventListener('click', () => api()?.app.clos
 
 async function init(): Promise<void> {
   updateWorkspaceUi();
+  await refreshProjectContext();
+  updateStatusLine();
   await refreshSessionList();
   renderTranscript(null);
   await loadModels();

@@ -459,3 +459,61 @@ textarea {
     animation: none !important;
   }
 }
+
+/* ---------- Komut paleti ve durum satırı ---------- */
+
+.palette {
+  width: min(760px, calc(100% - 48px));
+  margin: 0 auto 6px;
+  padding: 4px;
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--elev-2);
+}
+
+.palette-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  text-align: left;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.palette-item:hover,
+.palette-item.is-active {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.palette-name {
+  font-family: var(--mono);
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.palette-desc {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+}
+
+.status-line {
+  width: min(760px, calc(100% - 48px));
+  margin: 0 auto 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 11.5px;
+  color: var(--muted);
+}

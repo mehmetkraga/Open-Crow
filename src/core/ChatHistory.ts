@@ -34,6 +34,9 @@ export interface ChatSession {
   model: string;
   /** Oturumun çalışma klasörü; araçlar yalnızca bu klasörün içinde çalışır */
   workspace?: string;
+  /** Uzun sohbetin özeti; özetlenen mesaj sayısı summaryUpTo ile tutulur */
+  summary?: string;
+  summaryUpTo?: number;
 }
 
 const DB_NAME = 'kraga-ide-chats';

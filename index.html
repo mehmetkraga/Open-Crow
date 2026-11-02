@@ -54,6 +54,7 @@
             <label class="picker">
               <span class="sr-only">Onay modu</span>
               <select id="modeSelect" title="Araç onay modu">
+                <option value="plan">Plan (yalnızca oku)</option>
                 <option value="ask">Her değişikliği sor</option>
                 <option value="edits">Düzenlemeleri otomatik onayla</option>
                 <option value="auto">Her şeyi otomatik onayla</option>
@@ -86,6 +87,7 @@
           </button>
         </div>
 
+        <div class="palette" id="commandPalette" role="listbox" aria-label="Komutlar" hidden></div>
         <form class="composer" id="composer">
           <textarea id="input" rows="1" placeholder="Bir şey yaz…" aria-label="Mesaj" aria-describedby="composerHint"></textarea>
           <button type="submit" id="sendBtn" class="send-btn" title="Gönder" aria-label="Gönder" disabled>
@@ -97,6 +99,7 @@
           <span class="composer-keys"><kbd>Enter</kbd> gönderir · <kbd>Shift</kbd>+<kbd>Enter</kbd> yeni satır</span>
           <span class="composer-nomodel">Model seçili değil. Ayarlardan API bağlantısını kontrol et.</span>
         </p>
+        <div class="status-line" id="statusLine" aria-live="off"></div>
       </main>
     </div>
 
