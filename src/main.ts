@@ -1,14 +1,18 @@
 // src/main.ts
-// Open Crow — sohbet arayüzü. Oturumlar IndexedDB'de, sağlayıcı bilgisi localStorage'da tutulur.
+// Open Crow — sohbet ve ajan arayüzü. Oturumlar IndexedDB'de, sağlayıcı bilgisi localStorage'da tutulur.
 
 import './app.css';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import { sendAgentStream, fetchAvailableModels } from './core/proxyClient';
-import { ChatHistoryManager, type ChatSession } from './core/ChatHistory';
+import { ChatHistoryManager, type ChatMessage, type ChatSession, type ToolCall, type ToolStatus } from './core/ChatHistory';
+import { fetchModels, type ProviderConfig } from './agent/openai';
+import { runAgentTurn, type AgentEvents } from './agent/loop';
+import { summarizeCall, type ApprovalMode, type ToolBackend } from './agent/tools';
 
 const SETTINGS_KEY = 'kraga-ide-settings';
 const MODEL_KEY = 'kraga:model';
+const MODE_KEY = 'oc:mode';
+const WORKSPACE_KEY = 'oc:lastWorkspace';
 
 const history = new ChatHistoryManager();
 
@@ -17,9 +21,13 @@ const $ = <T extends Element>(id: string) => document.getElementById(id) as unkn
 const el = {
   sessionList: $<HTMLDivElement>('sessionList'),
   chatTitle: $<HTMLHeadingElement>('chatTitle'),
+  workspaceBtn: $<HTMLButtonElement>('workspaceBtn'),
+  workspaceName: $<HTMLSpanElement>('workspaceName'),
+  modeSelect: $<HTMLSelectElement>('modeSelect'),
   modelSelect: $<HTMLSelectElement>('modelSelect'),
   messages: $<HTMLDivElement>('messages'),
   emptyState: $<HTMLDivElement>('emptyState'),
+  emptyCopy: $<HTMLParagraphElement>('emptyCopy'),
   notice: $<HTMLDivElement>('notice'),
   composer: $<HTMLFormElement>('composer'),
   input: $<HTMLTextAreaElement>('input'),
@@ -33,36 +41,40 @@ const el = {
   settingsStatus: $<HTMLDivElement>('settingsStatus'),
 };
 
+type Api = NonNullable<Window['kragaAPI']>;
+
+const api = (): Api | undefined => (window as unknown as { kragaAPI?: Api }).kragaAPI;
+
 let activeSession: ChatSession | null = null;
+let workspace: string | null = localStorage.getItem(WORKSPACE_KEY);
 let abortController: AbortController | null = null;
 let noticeTimer: number | undefined;
 
 // ---------- Sağlayıcı ayarları ----------
 
-interface ProviderSettings {
-  mode: 'custom';
-  baseUrl: string;
-  apiKey: string;
-}
-
-function readSettings(): ProviderSettings {
+function readSettings(): ProviderConfig {
   try {
     const parsed = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
     if (parsed && parsed.mode === 'custom') {
-      return { mode: 'custom', baseUrl: parsed.baseUrl || '', apiKey: parsed.apiKey || '' };
+      return { baseUrl: parsed.baseUrl || '', apiKey: parsed.apiKey || '' };
     }
   } catch {
     // Bozuk kayıt: boş ayar say
   }
-  return { mode: 'custom', baseUrl: '', apiKey: '' };
+  return { baseUrl: '', apiKey: '' };
 }
 
-function writeSettings(settings: ProviderSettings): void {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+function writeSettings(config: ProviderConfig): void {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify({ mode: 'custom', baseUrl: config.baseUrl, apiKey: config.apiKey }));
 }
 
 function hasProvider(): boolean {
   return Boolean(readSettings().baseUrl);
+}
+
+function approvalMode(): ApprovalMode {
+  const saved = localStorage.getItem(MODE_KEY);
+  return saved === 'edits' || saved === 'auto' ? saved : 'ask';
 }
 
 // ---------- Bildirim şeridi ----------
@@ -143,10 +155,172 @@ function renderUserMessage(text: string): void {
   body.textContent = text;
 }
 
-function renderAssistantStatic(text: string): void {
-  const { body } = createMessageNode('assistant');
-  body.innerHTML = renderMarkdown(text);
-  decorateCodeBlocks(body);
+function createTypingIndicator(): HTMLDivElement {
+  const dots = document.createElement('div');
+  dots.className = 'typing';
+  dots.innerHTML = '<span></span><span></span><span></span>';
+  return dots;
+}
+
+// ---------- Araç kartları ----------
+
+const TOOL_LABELS: Record<string, string> = {
+  list_dir: 'Klasör listesi',
+  read_file: 'Dosya okuma',
+  write_file: 'Dosya yazma',
+  edit_file: 'Dosya düzenleme',
+  grep: 'Metin arama',
+  glob: 'Dosya arama',
+  run_command: 'Komut',
+  web_fetch: 'Web sayfası',
+};
+
+const STATUS_TEXT: Record<CardStatus, string> = {
+  running: 'Çalışıyor',
+  approval: 'Onay bekliyor',
+  done: 'Tamamlandı',
+  error: 'Hata',
+  denied: 'Reddedildi',
+  cancelled: 'Durduruldu',
+};
+
+type CardStatus = 'running' | 'approval' | ToolStatus;
+
+interface ToolCard {
+  root: HTMLDetailsElement;
+  setStatus(status: CardStatus): void;
+  setResult(text: string): void;
+  askApproval(call: ToolCall, args: Record<string, unknown>, onDecision: (approved: boolean) => void): void;
+}
+
+function parseArgs(raw: string): Record<string, unknown> {
+  try {
+    return JSON.parse(raw || '{}') as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
+function approvalPreview(name: string, args: Record<string, unknown>): HTMLPreElement {
+  const pre = document.createElement('pre');
+  pre.className = 'tool-preview';
+  const lines: string[] = [];
+  if (name === 'edit_file') {
+    const oldLines = String(args.old_string ?? '').split('\n').map((l) => `- ${l}`);
+    const newLines = String(args.new_string ?? '').split('\n').map((l) => `+ ${l}`);
+    lines.push(...oldLines, ...newLines);
+  } else if (name === 'write_file') {
+    lines.push(...String(args.content ?? '').split('\n'));
+  } else if (name === 'run_command') {
+    lines.push(String(args.command ?? ''));
+  }
+  const limited = lines.slice(0, 60);
+  if (lines.length > 60) limited.push(`… (${lines.length - 60} satır daha)`);
+  for (const line of limited) {
+    const span = document.createElement('span');
+    span.className = line.startsWith('+ ') ? 'add' : line.startsWith('- ') ? 'del' : '';
+    span.textContent = `${line}\n`;
+    pre.appendChild(span);
+  }
+  return pre;
+}
+
+function createToolCard(call: { id: string; name: string; arguments: string }): ToolCard {
+  const args = parseArgs(call.arguments);
+  const root = document.createElement('details');
+  root.className = 'tool-card';
+  root.dataset.status = 'running';
+
+  const summary = document.createElement('summary');
+  summary.className = 'tool-head';
+  const label = document.createElement('span');
+  label.className = 'tool-label';
+  label.textContent = TOOL_LABELS[call.name] ?? call.name;
+  const target = document.createElement('span');
+  target.className = 'tool-target';
+  target.textContent = summarizeCall(call.name, args);
+  const status = document.createElement('span');
+  status.className = 'tool-status';
+  status.textContent = STATUS_TEXT.running;
+  summary.append(label, target, status);
+
+  const approval = document.createElement('div');
+  approval.className = 'tool-approval';
+  approval.hidden = true;
+
+  const result = document.createElement('pre');
+  result.className = 'tool-result';
+  result.hidden = true;
+
+  root.append(summary, approval, result);
+
+  const setStatus = (value: CardStatus) => {
+    root.dataset.status = value;
+    status.textContent = STATUS_TEXT[value];
+    if (value === 'approval') root.open = true;
+  };
+
+  return {
+    root,
+    setStatus,
+    setResult(text: string) {
+      result.textContent = text;
+      result.hidden = !text;
+    },
+    askApproval(c, a, onDecision) {
+      approval.replaceChildren();
+      approval.hidden = false;
+      root.open = true;
+
+      const question = document.createElement('p');
+      question.className = 'approval-question';
+      question.textContent = c.name === 'run_command' ? 'Bu komutu çalıştırmama izin veriyor musun?' : 'Bu değişikliğe izin veriyor musun?';
+      const where = document.createElement('p');
+      where.className = 'approval-where';
+      where.textContent = `Klasör: ${workspace ?? '-'}`;
+
+      const buttons = document.createElement('div');
+      buttons.className = 'approval-actions';
+      const deny = document.createElement('button');
+      deny.type = 'button';
+      deny.className = 'btn-ghost';
+      deny.textContent = 'Reddet';
+      const allow = document.createElement('button');
+      allow.type = 'button';
+      allow.className = 'btn-primary';
+      allow.textContent = 'İzin ver';
+
+      const decide = (approved: boolean) => {
+        approval.hidden = true;
+        onDecision(approved);
+      };
+      deny.addEventListener('click', () => decide(false));
+      allow.addEventListener('click', () => decide(true));
+      buttons.append(deny, allow);
+
+      approval.append(question, where, approvalPreview(c.name, a), buttons);
+    },
+  };
+}
+
+/** Kalıcı bir asistan mesajını (metin + araç kartları) ekrana basar. */
+function renderAssistantNode(msg: ChatMessage, results: Map<string, ChatMessage>): void {
+  const { root, body } = createMessageNode('assistant');
+  if (msg.content) {
+    body.innerHTML = renderMarkdown(msg.content);
+    decorateCodeBlocks(body);
+  }
+  for (const call of msg.toolCalls ?? []) {
+    const card = createToolCard(call);
+    const stored = results.get(call.id);
+    if (stored) {
+      card.setStatus(stored.toolStatus ?? 'done');
+      card.setResult(stored.content);
+    } else {
+      card.setStatus('cancelled');
+    }
+    root.appendChild(card.root);
+  }
 }
 
 function renderTranscript(session: ChatSession | null): void {
@@ -156,9 +330,14 @@ function renderTranscript(session: ChatSession | null): void {
     return;
   }
   setEmptyVisible(false);
+
+  const results = new Map<string, ChatMessage>();
+  for (const msg of session.messages) {
+    if (msg.role === 'tool' && msg.toolCallId) results.set(msg.toolCallId, msg);
+  }
   for (const msg of session.messages) {
     if (msg.role === 'user') renderUserMessage(msg.content);
-    else if (msg.role === 'assistant') renderAssistantStatic(msg.content);
+    else if (msg.role === 'assistant') renderAssistantNode(msg, results);
   }
   scrollToBottom(true);
 }
@@ -189,7 +368,6 @@ async function refreshSessionList(): Promise<void> {
     heading.className = 'session-group-label';
     heading.textContent = group.label;
     el.sessionList.appendChild(heading);
-
     for (const session of group.items) {
       el.sessionList.appendChild(createSessionItem(session));
     }
@@ -206,6 +384,7 @@ function createSessionItem(session: ChatSession): HTMLElement {
   title.type = 'button';
   title.className = 'session-title';
   title.textContent = session.title || 'Yeni sohbet';
+  title.title = session.workspace ?? '';
   title.addEventListener('click', () => void openSession(session.id));
 
   const remove = document.createElement('button');
@@ -216,6 +395,7 @@ function createSessionItem(session: ChatSession): HTMLElement {
   remove.textContent = '×';
   remove.addEventListener('click', async (event) => {
     event.stopPropagation();
+    if (abortController) return;
     if (!window.confirm('Bu sohbet bu bilgisayardan silinsin mi?')) return;
     await history.deleteSession(session.id);
     if (activeSession?.id === session.id) {
@@ -235,6 +415,7 @@ async function openSession(id: string): Promise<void> {
   const session = await history.getSession(id);
   if (!session) return;
   activeSession = session;
+  if (session.workspace) setWorkspace(session.workspace, false);
   el.chatTitle.textContent = session.title || 'Yeni sohbet';
   renderTranscript(session);
   await refreshSessionList();
@@ -248,6 +429,42 @@ function startNewChat(): void {
   renderTranscript(null);
   void refreshSessionList();
   el.input.focus();
+}
+
+// ---------- Çalışma klasörü ve mod ----------
+
+function folderName(path: string): string {
+  const parts = path.split(/[\\/]/).filter(Boolean);
+  return parts[parts.length - 1] ?? path;
+}
+
+function updateWorkspaceUi(): void {
+  el.workspaceName.textContent = workspace ? folderName(workspace) : 'Klasör seç';
+  el.workspaceBtn.title = workspace ?? 'Çalışma klasörü seç';
+  el.emptyCopy.textContent = workspace
+    ? `Çalışma klasörün: ${workspace}. Dosyaları okuyup düzenleyebilir, komut çalıştırabilirim.`
+    : 'Önce bir çalışma klasörü seç; ardından dosyaları okuyup düzenleyebilirim.';
+}
+
+function setWorkspace(path: string | null, persistGlobal = true): void {
+  workspace = path;
+  if (path) localStorage.setItem(WORKSPACE_KEY, path);
+  updateWorkspaceUi();
+  if (persistGlobal && activeSession && activeSession.workspace !== path) {
+    activeSession.workspace = path ?? undefined;
+    void history.updateSession(activeSession.id, { workspace: path ?? undefined });
+  }
+}
+
+async function pickWorkspace(): Promise<void> {
+  const kragaAPI = api();
+  if (!kragaAPI) {
+    showNotice('Klasör seçimi yalnızca masaüstü uygulamasında çalışır.', 'error');
+    return;
+  }
+  if (abortController) return;
+  const picked = await kragaAPI.fs.openFolder();
+  if (picked) setWorkspace(picked);
 }
 
 // ---------- Model seçimi ----------
@@ -277,7 +494,7 @@ async function loadModels(): Promise<void> {
     return;
   }
   try {
-    const models = await fetchAvailableModels();
+    const models = await fetchModels(readSettings());
     setModelOptions(models);
     el.settingsStatus.dataset.kind = 'ok';
     el.settingsStatus.textContent = `${models.length} model bulundu.`;
@@ -288,7 +505,7 @@ async function loadModels(): Promise<void> {
   }
 }
 
-// ---------- Gönderim ----------
+// ---------- Gönderim ve ajan turu ----------
 
 function setBusy(busy: boolean): void {
   el.sendBtn.classList.toggle('is-stop', busy);
@@ -297,13 +514,47 @@ function setBusy(busy: boolean): void {
   el.iconSend.toggleAttribute('hidden', busy);
   el.iconStop.toggleAttribute('hidden', !busy);
   el.input.disabled = busy;
+  el.workspaceBtn.disabled = busy;
 }
 
-function createTypingIndicator(): HTMLDivElement {
-  const dots = document.createElement('div');
-  dots.className = 'typing';
-  dots.innerHTML = '<span></span><span></span><span></span>';
-  return dots;
+interface TurnView {
+  /** Açık asistan düğümü (akış sürüyorsa) */
+  current: { root: HTMLDivElement; body: HTMLDivElement; streamText: HTMLDivElement | null } | null;
+  /** Son kapanan asistan düğümü; araç kartları buraya eklenir */
+  lastRoot: HTMLDivElement | null;
+  cards: Map<string, ToolCard>;
+  pendingApprovals: Map<string, (approved: boolean) => void>;
+}
+
+function ensureCurrent(view: TurnView) {
+  if (!view.current) {
+    const { root, body } = createMessageNode('assistant');
+    body.appendChild(createTypingIndicator());
+    view.current = { root, body, streamText: null };
+  }
+  return view.current;
+}
+
+function storedFields(msg: ChatMessage) {
+  return {
+    role: msg.role,
+    content: msg.content,
+    model: msg.model,
+    toolCalls: msg.toolCalls,
+    toolCallId: msg.toolCallId,
+    toolName: msg.toolName,
+    toolStatus: msg.toolStatus,
+  };
+}
+
+function cardFor(view: TurnView, id: string, name: string): ToolCard {
+  let card = view.cards.get(id);
+  if (!card) {
+    card = createToolCard({ id, name, arguments: '{}' });
+    view.cards.set(id, card);
+    (view.lastRoot ?? ensureCurrent(view).root).appendChild(card.root);
+  }
+  return card;
 }
 
 async function send(rawText: string): Promise<void> {
@@ -315,7 +566,6 @@ async function send(rawText: string): Promise<void> {
     openSettings();
     return;
   }
-
   const model = el.modelSelect.value || localStorage.getItem(MODEL_KEY) || '';
   if (!model) {
     showNotice('Bir model seç. Model listesi boşsa ayarlardan bağlantıyı kontrol et.', 'error', 6000);
@@ -327,8 +577,11 @@ async function send(rawText: string): Promise<void> {
 
   if (!activeSession) {
     activeSession = await history.createSession();
+    if (workspace) {
+      activeSession.workspace = workspace;
+      await history.updateSession(activeSession.id, { workspace });
+    }
   }
-  // Kayıtlı kopyayı her gönderimde tazele: mesaj listesi IndexedDB'de tutulur
   const isFirstMessage = (await history.getSession(activeSession.id))?.messages.length === 0;
   if (isFirstMessage) {
     await history.autoTitle(activeSession.id, text);
@@ -337,75 +590,134 @@ async function send(rawText: string): Promise<void> {
   const session = (await history.getSession(activeSession.id))!;
   activeSession = session;
   el.chatTitle.textContent = session.title || 'Yeni sohbet';
-
-  renderUserMessage(text);
   setEmptyVisible(false);
-
-  const { root, body } = createMessageNode('assistant');
-  body.appendChild(createTypingIndicator());
+  renderUserMessage(text);
   scrollToBottom(true);
 
-  const conversation = session.messages.map((m) => ({ role: m.role, content: m.content }));
-
-  let full = '';
-  let streamText: HTMLDivElement | null = null;
+  const conversation = session.messages;
+  const kragaAPI = api();
   const controller = new AbortController();
   abortController = controller;
   setBusy(true);
 
-  const showText = (text: string) => {
-    if (!streamText) {
-      body.replaceChildren();
-      streamText = document.createElement('div');
-      streamText.className = 'stream-text';
-      body.appendChild(streamText);
-    }
-    streamText.textContent = text;
+  const view: TurnView = { current: null, lastRoot: null, cards: new Map(), pendingApprovals: new Map() };
+
+  const events: AgentEvents = {
+    onText(delta) {
+      const node = ensureCurrent(view);
+      if (!node.streamText) {
+        node.body.replaceChildren();
+        node.streamText = document.createElement('div');
+        node.streamText.className = 'stream-text';
+        node.body.appendChild(node.streamText);
+      }
+      node.streamText.textContent += delta;
+      scrollToBottom();
+    },
+
+    async onAssistant(msg) {
+      const node = ensureCurrent(view);
+      const stored = await history.addMessage(session.id, storedFields(msg));
+      node.body.replaceChildren();
+      if (stored.content) {
+        node.body.innerHTML = renderMarkdown(stored.content);
+        decorateCodeBlocks(node.body);
+      }
+      view.lastRoot = node.root;
+      view.current = null;
+      scrollToBottom();
+    },
+
+    onToolStart(call, needsApproval) {
+      const card = cardFor(view, call.id, call.name);
+      card.setStatus(needsApproval ? 'approval' : 'running');
+      scrollToBottom();
+    },
+
+    requestApproval(call) {
+      const card = view.cards.get(call.id);
+      return new Promise<boolean>((resolve) => {
+        const settle = (approved: boolean) => {
+          view.pendingApprovals.delete(call.id);
+          card?.setStatus(approved ? 'running' : 'denied');
+          resolve(approved);
+        };
+        view.pendingApprovals.set(call.id, settle);
+        card?.askApproval(call, parseArgs(call.arguments), settle);
+        scrollToBottom();
+      });
+    },
+
+    async onToolResult(msg) {
+      const stored = await history.addMessage(session.id, storedFields(msg));
+      const card = cardFor(view, stored.toolCallId ?? '', stored.toolName ?? '');
+      card.setStatus(stored.toolStatus ?? 'done');
+      card.setResult(stored.content);
+      scrollToBottom();
+    },
   };
 
-  let failure = null as Error | null;
+  let failure: string | null = null;
   try {
-    await sendAgentStream(
+    await runAgentTurn(
       conversation,
+      events,
       {
-        onChunk: (chunk) => {
-          full += chunk;
-          showText(full);
-          scrollToBottom();
-        },
-        onDone: () => {},
-        onError: (err) => {
-          failure = err;
-        },
+        config: readSettings(),
+        model,
+        workspace: workspace ?? undefined,
+        mode: approvalMode(),
+        backend: kragaAPI ? makeBackend(kragaAPI) : offlineBackend(),
+        signal: controller.signal,
       },
-      { model, signal: controller.signal },
     );
   } catch (err) {
-    failure = err instanceof Error ? err : new Error(String(err));
+    if (!controller.signal.aborted) {
+      failure = err instanceof Error ? err.message : String(err);
+    }
   } finally {
+    for (const settle of view.pendingApprovals.values()) settle(false);
+    view.pendingApprovals.clear();
+    if (view.current && !view.current.body.textContent?.trim()) view.current.root.remove();
     abortController = null;
     setBusy(false);
   }
 
-  const stopped = controller.signal.aborted;
-  if (full.trim()) {
-    body.innerHTML = renderMarkdown(full);
-    decorateCodeBlocks(body);
-    await history.addMessage(session.id, { role: 'assistant', content: full, model });
-  } else if (stopped) {
-    root.remove();
-  } else {
-    root.remove();
-    const message = failure ? failure.message : 'Yanıt alınamadı.';
-    showNotice(message, 'error', 9000);
-  }
-
-  if (stopped && full.trim()) {
-    root.classList.add('is-stopped');
+  if (controller.signal.aborted) {
+    showNotice('Çalışma durduruldu.', 'info');
+  } else if (failure) {
+    showNotice(failure, 'error', 9000);
   }
 
   await refreshSessionList();
   el.input.focus();
+}
+
+function offlineBackend(): ToolBackend {
+  const fail = async (): Promise<never> => {
+    throw new Error('Araçlar yalnızca masaüstü uygulamasında çalışır.');
+  };
+  return {
+    readDirectory: fail,
+    readFile: fail,
+    writeFile: fail,
+    grep: fail,
+    glob: fail,
+    runCommand: fail,
+    fetchUrl: fail,
+  };
+}
+
+function makeBackend(kragaAPI: Api): ToolBackend {
+  return {
+    readDirectory: (dirPath) => kragaAPI.fs.readDirectory(dirPath),
+    readFile: (filePath) => kragaAPI.fs.readFile(filePath),
+    writeFile: (filePath, content) => kragaAPI.fs.writeFile(filePath, content),
+    grep: (root, pattern, opts) => kragaAPI.workspace.grep(root, pattern, opts),
+    glob: (root, pattern, limit) => kragaAPI.workspace.glob(root, pattern, limit),
+    runCommand: (command, cwd) => kragaAPI.terminal.runCommand(command, cwd),
+    fetchUrl: (url, maxChars) => kragaAPI.web.fetch(url, maxChars),
+  };
 }
 
 // ---------- Girdi alanı ----------
@@ -444,6 +756,12 @@ el.modelSelect.addEventListener('change', () => {
   localStorage.setItem(MODEL_KEY, el.modelSelect.value);
 });
 
+el.modeSelect.value = approvalMode();
+el.modeSelect.addEventListener('change', () => {
+  localStorage.setItem(MODE_KEY, el.modeSelect.value);
+});
+
+el.workspaceBtn.addEventListener('click', () => void pickWorkspace());
 $<HTMLButtonElement>('btnNewChat').addEventListener('click', startNewChat);
 
 // ---------- Ayarlar penceresi ----------
@@ -479,7 +797,7 @@ el.settingsForm.addEventListener('submit', async (event) => {
     return;
   }
   baseUrl = baseUrl.replace(/\/+$/, '');
-  writeSettings({ mode: 'custom', baseUrl, apiKey: el.setApiKey.value.trim() });
+  writeSettings({ baseUrl, apiKey: el.setApiKey.value.trim() });
   el.settingsStatus.dataset.kind = '';
   el.settingsStatus.textContent = 'Kaydedildi. Modeller alınıyor…';
   await loadModels();
@@ -498,13 +816,14 @@ $<HTMLButtonElement>('btnClearSettings').addEventListener('click', () => {
 
 // ---------- Pencere kontrolleri ----------
 
-$<HTMLButtonElement>('btnMinimize').addEventListener('click', () => window.kragaAPI?.app.minimize());
-$<HTMLButtonElement>('btnMaximize').addEventListener('click', () => window.kragaAPI?.app.maximize());
-$<HTMLButtonElement>('btnClose').addEventListener('click', () => window.kragaAPI?.app.close());
+$<HTMLButtonElement>('btnMinimize').addEventListener('click', () => api()?.app.minimize());
+$<HTMLButtonElement>('btnMaximize').addEventListener('click', () => api()?.app.maximize());
+$<HTMLButtonElement>('btnClose').addEventListener('click', () => api()?.app.close());
 
 // ---------- Başlangıç ----------
 
 async function init(): Promise<void> {
+  updateWorkspaceUi();
   await refreshSessionList();
   renderTranscript(null);
   await loadModels();

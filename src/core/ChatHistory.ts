@@ -1,11 +1,25 @@
+export interface ToolCall {
+  id: string;
+  name: string;
+  arguments: string;
+}
+
+export type ToolStatus = 'done' | 'error' | 'denied' | 'cancelled';
+
 export interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'assistant' | 'system' | 'tool';
   content: string;
   timestamp: number;
   model?: string;
   tokensUsed?: number;
   isStarred?: boolean;
+  /** assistant: istenen araç çağrıları */
+  toolCalls?: ToolCall[];
+  /** tool: karşılık geldiği çağrı */
+  toolCallId?: string;
+  toolName?: string;
+  toolStatus?: ToolStatus;
 }
 
 export interface ChatSession {
@@ -16,6 +30,8 @@ export interface ChatSession {
   updatedAt: number;
   isPinned: boolean;
   model: string;
+  /** Oturumun çalışma klasörü; araçlar yalnızca bu klasörün içinde çalışır */
+  workspace?: string;
 }
 
 const DB_NAME = 'kraga-ide-chats';

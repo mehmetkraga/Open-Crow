@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseProviderError } from '../src/core/proxyClient';
+import { parseProviderError } from '../src/agent/openai';
 
 describe('parseProviderError', () => {
   it('sayısal code değerini metne çevirir (tt.includes is not a function hatası)', () => {
@@ -18,8 +18,5 @@ describe('parseProviderError', () => {
   });
   it('JSON olmayan gövdeyi olduğu gibi döner', () => {
     expect(parseProviderError('<html>502</html>')).toEqual({ message: '<html>502</html>', code: '' });
-  });
-  it('Kraga formatını korur', () => {
-    expect(parseProviderError('{"error":{"code":"PROMO_REQUIRED","message":"Aktif bir promo yok"}}')).toEqual({ message: 'Aktif bir promo yok', code: 'PROMO_REQUIRED' });
   });
 });
