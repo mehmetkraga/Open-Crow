@@ -403,39 +403,54 @@ button:disabled {
 
 .msg-user .msg-body {
   max-width: 80%;
+  min-width: 0;
   padding: 8px 12px;
   border-radius: var(--radius);
   background: var(--panel);
   border: 1px solid var(--border);
+  line-height: 1.55;
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
+/* Asistan metni: 70ch ölçüsü (14px Inter'de ~75-80 karakter) ve düz satır ritmi */
 .msg-assistant .msg-body {
   max-width: 70ch;
-  word-break: break-word;
+  min-width: 0;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
 }
 
 .msg-assistant .msg-body:empty {
   display: none;
 }
 
+/* Yanıtın son öğesi kendi alt boşluğunu taşımaz; mesaj kutusu aralığı yeter */
+.msg-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* Durdurulmuş yanıt: etiket metnin sol kenarında, metinden ayrık */
 .msg-assistant.is-stopped .msg-body::after {
   content: "Durduruldu";
   display: block;
-  margin-top: 6px;
+  margin-top: 8px;
   font-size: 12px;
+  line-height: 1.4;
   color: var(--muted);
 }
 
 .stream-text {
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
+/* Üç nokta: metin satırıyla aynı yükseklikte, ilk harf geldiğinde zıplamaz */
 .typing {
   display: inline-flex;
+  align-items: center;
   gap: 4px;
-  padding: 6px 0;
+  height: 1.65em;
 }
 
 .typing span {
@@ -456,41 +471,91 @@ button:disabled {
 
 /* Markdown */
 
+/* Ölçek: gövde 14px; başlıklar 20 / 17 / 15px (adım ~1.15-1.2), 600 ağırlık */
+
 .msg-assistant p {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
 }
 
 .msg-assistant h1,
 .msg-assistant h2,
 .msg-assistant h3 {
-  margin: 16px 0 8px;
+  margin: 20px 0 8px;
   line-height: 1.3;
   font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
 }
 
-.msg-assistant h1 { font-size: 17px; }
-.msg-assistant h2 { font-size: 15px; }
-.msg-assistant h3 { font-size: 14px; }
+.msg-assistant h1 { font-size: 20px; }
+.msg-assistant h2 { font-size: 17px; }
+.msg-assistant h3 { font-size: 15px; }
 
+.msg-assistant .msg-body > :first-child {
+  margin-top: 0;
+}
+
+.msg-assistant strong {
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Liste: girinti 22px, madde işareti sessiz; gevşek maddede p boşluğu daralır */
 .msg-assistant ul,
 .msg-assistant ol {
-  margin: 0 0 10px;
-  padding-left: 20px;
+  margin: 0 0 12px;
+  padding-left: 22px;
 }
 
 .msg-assistant li + li {
-  margin-top: 2px;
+  margin-top: 4px;
+}
+
+.msg-assistant li::marker {
+  color: var(--muted);
+}
+
+.msg-assistant li > p {
+  margin: 0 0 6px;
+}
+
+.msg-assistant li > :last-child {
+  margin-bottom: 0;
 }
 
 .msg-assistant a {
   color: var(--focus);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  border-radius: 2px;
+}
+
+.msg-assistant a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .msg-assistant blockquote {
-  margin: 8px 0;
-  padding-left: 12px;
+  margin: 12px 0;
+  padding: 2px 0 2px 14px;
   border-left: 2px solid var(--border-strong);
   color: var(--text-2);
+}
+
+.msg-assistant blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.msg-assistant hr {
+  margin: 20px 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.msg-assistant img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
 }
 
 .msg-assistant :not(pre) > code {
@@ -500,55 +565,94 @@ button:disabled {
   border: 1px solid var(--border);
   font-family: var(--mono);
   font-size: 12.5px;
+  overflow-wrap: anywhere;
 }
 
+/* Tablo: yatay kaydırma kutu içinde kalır; başlık satırı ayrışır */
 .msg-assistant table {
   display: block;
+  max-width: 100%;
   overflow-x: auto;
   border-collapse: collapse;
-  margin: 8px 0;
+  margin: 12px 0;
 }
 
 .msg-assistant th,
 .msg-assistant td {
-  padding: 5px 9px;
+  padding: 6px 10px;
   border: 1px solid var(--border);
   text-align: left;
+  vertical-align: top;
 }
 
+.msg-assistant th {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Kod bloğu: başlık şeridi (dil + kopyala) akışta durur, kod kendi satırında kayar */
+
 .code-wrap {
-  position: relative;
-  margin: 8px 0;
+  margin: 12px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.code-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 6px 0 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.code-lang {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+
+.code-copy {
+  margin-left: auto;
+  min-width: 78px;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.code-copy.is-copied {
+  color: var(--ok);
+}
+
+.code-copy.is-failed {
+  color: var(--danger);
 }
 
 .code-wrap pre {
   margin: 0;
   padding: 12px 16px;
   overflow-x: auto;
-  border-radius: var(--radius);
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: transparent;
   font-family: var(--mono);
   font-size: 12.5px;
-  line-height: 1.55;
-}
-
-.code-copy {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  padding: 2px 8px;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  background: var(--panel);
-  font-size: 11px;
-  color: var(--text-2);
-  opacity: 0;
-}
-
-.code-wrap:hover .code-copy,
-.code-copy:focus-visible {
-  opacity: 1;
+  line-height: 1.6;
+  tab-size: 2;
 }
 
 /* Boş durum: sola yaslı, düz liste */
