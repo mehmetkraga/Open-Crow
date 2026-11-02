@@ -2,6 +2,8 @@
 // Open Crow — sohbet ve ajan arayüzü. Oturumlar IndexedDB'de, sağlayıcı bilgisi localStorage'da tutulur.
 
 import './app.css';
+import './detail.css';
+import { initEffects } from './ui/effects';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { ChatHistoryManager, type ChatMessage, type ChatSession, type ToolCall, type ToolStatus } from './core/ChatHistory';
@@ -106,6 +108,15 @@ function decorateCodeBlocks(container: HTMLElement): void {
     wrap.className = 'code-wrap';
     pre.parentNode?.insertBefore(wrap, pre);
     wrap.appendChild(pre);
+
+    const language = pre.querySelector('code')?.className.match(/language-([\w-]+)/)?.[1];
+    if (language) {
+      wrap.classList.add('has-lang');
+      const label = document.createElement('span');
+      label.className = 'code-lang';
+      label.textContent = language;
+      wrap.appendChild(label);
+    }
 
     const copy = document.createElement('button');
     copy.type = 'button';
@@ -610,7 +621,7 @@ async function send(rawText: string): Promise<void> {
       if (!node.streamText) {
         node.body.replaceChildren();
         node.streamText = document.createElement('div');
-        node.streamText.className = 'stream-text';
+        node.streamText.className = 'stream-text is-streaming';
         node.body.appendChild(node.streamText);
       }
       node.streamText.textContent += delta;
@@ -835,4 +846,5 @@ async function init(): Promise<void> {
   el.input.focus();
 }
 
+initEffects();
 void init();

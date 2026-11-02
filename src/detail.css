@@ -1,0 +1,515 @@
+/* Open Crow — etkileşim detayları ve derinlik.
+   app.css'ten sonra yüklenir. Renkler app.css'teki tokenlardan gelir. */
+
+:root {
+  --elev-1: inset 0 1px 0 rgba(255, 255, 255, 0.035), 0 1px 2px rgba(0, 0, 0, 0.35);
+  --elev-2: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px -14px rgba(0, 0, 0, 0.7);
+  --elev-3: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 2px 4px rgba(0, 0, 0, 0.4), 0 28px 64px -20px rgba(0, 0, 0, 0.8);
+  --spot: color-mix(in srgb, var(--text) 5%, transparent);
+  --glow: color-mix(in srgb, var(--accent) 38%, transparent);
+  --ease-soft: cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --elev-1: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 2px rgba(0, 0, 0, 0.05);
+    --elev-2: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.06), 0 10px 28px -14px rgba(0, 0, 0, 0.18);
+    --elev-3: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 4px rgba(0, 0, 0, 0.06), 0 28px 64px -20px rgba(0, 0, 0, 0.3);
+    --spot: color-mix(in srgb, var(--text) 4%, transparent);
+  }
+}
+
+/* ---------- Seçim ve imleç ---------- */
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 38%, transparent);
+  color: inherit;
+}
+
+textarea {
+  caret-color: var(--accent-hover);
+}
+
+/* İnce, yalnızca üzerindeyken belirginleşen kaydırma çubukları */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--faint);
+  background-clip: content-box;
+}
+
+/* ---------- Pencere ve kenar çubuğu derinliği ---------- */
+
+.titlebar {
+  position: relative;
+}
+
+.titlebar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.win-btn {
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, #fff 8%) 0%, var(--surface) 240px);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.02);
+}
+
+.chat-header {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 96%, #fff 4%), var(--bg));
+}
+
+/* ---------- Gezinti öğeleri: imleci izleyen ışık ---------- */
+
+.session-item,
+.suggestion,
+.new-chat,
+.side-footer,
+.tool-head,
+.workspace-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.session-item::before,
+.suggestion::before,
+.new-chat::before,
+.side-footer::before,
+.tool-head::before,
+.workspace-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(160px circle at var(--mx, 50%) var(--my, 50%), var(--spot), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s var(--ease-soft);
+  pointer-events: none;
+}
+
+.session-item:hover::before,
+.suggestion:hover::before,
+.new-chat:hover::before,
+.side-footer:hover::before,
+.tool-head:hover::before,
+.workspace-btn:hover::before {
+  opacity: 1;
+}
+
+/* Tıklama yansıması: tıklanan noktadan yayılıp sönen ışık */
+
+.press-light {
+  position: absolute;
+  left: var(--px);
+  top: var(--py);
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+  animation: press-bloom 0.7s var(--ease-soft) forwards;
+}
+
+@keyframes press-bloom {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.9;
+  }
+  60% {
+    opacity: 0.45;
+  }
+  100% {
+    width: 320px;
+    height: 320px;
+    opacity: 0;
+  }
+}
+
+/* ---------- Girdi alanı: odakta ışık ve sızıntı ---------- */
+
+.composer {
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--elev-2);
+  transition: border-color 0.25s ease, box-shadow 0.3s var(--ease-soft);
+  --px: 50%;
+  --py: 0%;
+}
+
+.composer:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border-strong));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent),
+    0 0 26px -10px var(--glow),
+    var(--elev-2);
+}
+
+.composer:focus-within::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(260px circle at var(--px) var(--py), color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.composer > * {
+  position: relative;
+  z-index: 1;
+}
+
+.composer textarea::placeholder {
+  transition: opacity 0.2s ease;
+}
+
+.composer:focus-within textarea::placeholder {
+  opacity: 0.55;
+}
+
+/* ---------- Düğmeler ---------- */
+
+.send-btn {
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--elev-1);
+  transition: transform 0.15s var(--ease-soft), box-shadow 0.25s ease, opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.send-btn:hover:not(:disabled) {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent), var(--elev-1);
+}
+
+.send-btn:active:not(:disabled) {
+  transform: scale(0.93);
+}
+
+.send-btn svg {
+  transition: transform 0.2s var(--ease-soft);
+}
+
+.send-btn:hover:not(:disabled):not(.is-stop) svg {
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--elev-1);
+  transition: transform 0.15s var(--ease-soft), box-shadow 0.25s ease, opacity 0.2s ease;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent), var(--elev-1);
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+}
+
+.new-chat {
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.15s var(--ease-soft);
+}
+
+.new-chat:hover {
+  border-color: var(--border-strong);
+}
+
+.new-chat:active {
+  transform: scale(0.985);
+}
+
+.new-chat svg {
+  transition: transform 0.25s var(--ease-soft);
+}
+
+.new-chat:hover svg {
+  transform: rotate(90deg);
+}
+
+.suggestion::after {
+  display: inline-block;
+  transition: transform 0.25s var(--ease-soft), color 0.2s ease;
+}
+
+.suggestion:hover::after {
+  transform: translateX(4px);
+  color: var(--accent-hover);
+}
+
+.session-item {
+  transition: background-color 0.2s ease;
+}
+
+.session-item.is-active {
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.session-delete {
+  transition: opacity 0.2s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.session-delete:hover {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+/* ---------- Mesajlar ---------- */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.msg {
+  animation: rise 0.24s var(--ease-soft) both;
+}
+
+.msg-user .msg-body {
+  box-shadow: var(--elev-1);
+}
+
+.msg-assistant a {
+  text-decoration-color: color-mix(in srgb, var(--accent-hover) 50%, transparent);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s ease;
+}
+
+.msg-assistant a:hover {
+  text-decoration-color: var(--accent-hover);
+}
+
+/* Akan yanıtın sonundaki imleç */
+
+.stream-text.is-streaming::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  border-radius: 1px;
+  background: var(--accent-hover);
+  animation: caret 1s steps(1) infinite;
+}
+
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+.typing span {
+  animation: bounce 1.1s var(--ease-soft) infinite;
+}
+
+@keyframes bounce {
+  0%, 70%, 100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.35;
+  }
+  35% {
+    transform: translate3d(0, -4px, 0);
+    opacity: 1;
+  }
+}
+
+/* Kod blokları: dil etiketi ve derinlik */
+
+.code-wrap {
+  overflow: hidden;
+  border-radius: var(--radius);
+  box-shadow: var(--elev-1);
+}
+
+.code-wrap pre {
+  border: 0;
+  border-radius: 0;
+}
+
+.code-lang {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+  pointer-events: none;
+}
+
+.code-wrap.has-lang pre {
+  padding-top: 38px;
+}
+
+.code-wrap.has-lang .code-copy {
+  top: 4px;
+}
+
+.code-copy {
+  transition: opacity 0.2s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.code-copy:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+/* ---------- Araç kartları: derinlik ve çalışma sırasında yayılan ışık ---------- */
+
+.tool-card {
+  box-shadow: var(--elev-1);
+  transition: border-color 0.2s ease, box-shadow 0.25s ease;
+}
+
+.tool-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--elev-2);
+}
+
+.tool-card[data-status="running"] .tool-head {
+  background-image: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--accent-hover) 7%, transparent) 50%, transparent 100%);
+  background-size: 220% 100%;
+  animation: sheen 2.2s linear infinite;
+}
+
+@keyframes sheen {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+
+.tool-card[data-status="approval"] {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--attention) 12%, transparent), var(--elev-2);
+  animation: approval-breathe 2.8s ease-in-out infinite;
+}
+
+@keyframes approval-breathe {
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--attention) 18%, transparent), var(--elev-2);
+  }
+}
+
+.tool-head::before {
+  transition: opacity 0.3s var(--ease-soft);
+}
+
+.tool-preview .add {
+  background: color-mix(in srgb, var(--ok) 10%, transparent);
+}
+
+.tool-preview .del {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+/* ---------- Boş durum: sırayla beliren öğeler ---------- */
+
+.empty h2,
+.empty p,
+.empty .suggestion {
+  animation: rise 0.42s var(--ease-soft) both;
+}
+
+.empty p {
+  animation-delay: 0.05s;
+}
+
+.empty .suggestion:nth-child(1) { animation-delay: 0.1s; }
+.empty .suggestion:nth-child(2) { animation-delay: 0.15s; }
+.empty .suggestion:nth-child(3) { animation-delay: 0.2s; }
+
+/* ---------- Ayar penceresi ---------- */
+
+.overlay {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.modal {
+  box-shadow: var(--elev-3);
+}
+
+.modal-header h2 {
+  letter-spacing: -0.005em;
+}
+
+.field input {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field input:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.notice {
+  box-shadow: var(--elev-2);
+  animation: rise 0.3s var(--ease-soft) both;
+}
+
+.picker select,
+.workspace-btn {
+  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+.picker select:focus-visible,
+.workspace-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+/* ---------- Hareket azaltma ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .press-light,
+  .msg,
+  .empty h2,
+  .empty p,
+  .empty .suggestion,
+  .tool-card[data-status="running"] .tool-head,
+  .tool-card[data-status="approval"],
+  .stream-text.is-streaming::after,
+  .typing span {
+    animation: none !important;
+  }
+}
