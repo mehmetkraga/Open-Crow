@@ -83,13 +83,19 @@ function approvalMode(): ApprovalMode {
 // ---------- Bildirim şeridi ----------
 
 function showNotice(text: string, kind: 'info' | 'error' = 'info', ms = 5000): void {
-  el.notice.textContent = text;
+  // Hata mesajı en az 9 sn görünür kalır; kapatma (×, Escape) effects.ts içinde.
+  const duration = kind === 'error' ? Math.max(ms, 9000) : ms;
+  const tag = el.notice.querySelector<HTMLElement>('.notice-tag');
+  const body = el.notice.querySelector<HTMLElement>('.notice-text');
+  if (tag) tag.textContent = kind === 'error' ? 'Hata' : 'Bilgi';
+  if (body) body.textContent = text;
   el.notice.dataset.kind = kind;
+  el.notice.setAttribute('aria-live', kind === 'error' ? 'assertive' : 'polite');
   el.notice.hidden = false;
   window.clearTimeout(noticeTimer);
   noticeTimer = window.setTimeout(() => {
     el.notice.hidden = true;
-  }, ms);
+  }, duration);
 }
 
 // ---------- Markdown ----------
@@ -530,8 +536,9 @@ function updateWorkspaceUi(): void {
   el.workspaceBtn.title = workspace ?? 'Çalışma klasörü seç';
   el.emptyTitle.textContent = workspace ? folderName(workspace) : 'Çalışma klasörü seçilmedi';
   el.emptyCopy.textContent = workspace
-    ? `${workspace} içinde dosya okuyabilir, düzenleyebilir ve komut çalıştırabilirim.`
-    : 'Dosyaları okuyup düzenlemem için önce üst çubuktan bir çalışma klasörü seç.';
+    ? 'Bu klasörde dosya okuyabilir, düzenleyebilir ve komut çalıştırabilirim. Aşağıdan bir öneri seç ya da ne istediğini yaz.'
+    : 'Dosyalarını okuyup düzenlemem için üst çubuktan bir çalışma klasörü seç.';
+  el.emptyCopy.title = workspace ?? '';
 }
 
 function setWorkspace(path: string | null, persistGlobal = true): void {

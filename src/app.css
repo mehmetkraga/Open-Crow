@@ -767,21 +767,23 @@ button:disabled {
   tab-size: 2;
 }
 
-/* Boş durum: sola yaslı, düz liste */
+/* Boş durum: sola yaslı, düz liste. Dikey olarak üst boşluk ekran yüksekliğine göre orantılı. */
 
 .empty {
   width: min(760px, calc(100% - 48px));
-  margin: 12vh auto 0;
+  margin: clamp(24px, 12vh, 120px) auto 0;
 }
 
 .empty h2 {
   margin: 0 0 6px;
   font-size: 20px;
   font-weight: 600;
+  line-height: 1.3;
   letter-spacing: -0.01em;
 }
 
 .empty p {
+  max-width: 60ch;
   margin: 0 0 20px;
   color: var(--muted);
 }
@@ -792,32 +794,53 @@ button:disabled {
   border-top: 1px solid var(--border);
 }
 
+/* Öneri satırı: metin solda, ok sağda. Odak ve üzerine gelme durumları görünür. */
 .suggestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
   padding: 12px 4px;
   border: 0;
   border-bottom: 1px solid var(--border);
   background: transparent;
   text-align: left;
   font-size: 13.5px;
+  line-height: 1.45;
   color: var(--text-2);
 }
 
+/* Ok CSS ile çizilir: ekran okuyucuda "→" olarak okunmaz. Hareketi detail.css'te. */
 .suggestion::after {
-  content: "→";
-  float: right;
-  color: var(--muted);
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-top: 1.5px solid var(--muted);
+  border-right: 1.5px solid var(--muted);
+  transform: rotate(45deg);
 }
 
-.suggestion:hover {
+.suggestion:hover,
+.suggestion:focus-visible {
   color: var(--text);
 }
 
-/* Bildirim şeridi */
+.suggestion:focus-visible {
+  outline-offset: -2px;
+  border-radius: 0;
+}
+
+/* Bildirim şeridi: renk tek başına anlam taşımaz, etiket de var (Hata / Bilgi) */
 
 .notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: min(760px, calc(100% - 48px));
   margin: 0 auto 8px;
-  padding: 8px 12px;
+  padding: 8px 8px 8px 12px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-strong);
   background: var(--panel);
@@ -825,7 +848,46 @@ button:disabled {
   color: var(--text-2);
 }
 
+.notice-tag {
+  flex: none;
+  padding: 0 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--muted);
+}
+
+.notice-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.notice-close {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.notice-close:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+}
+
 .notice[data-kind="error"] {
+  border-color: color-mix(in srgb, var(--danger) 50%, transparent);
+  color: var(--danger);
+}
+
+.notice[data-kind="error"] .notice-tag {
   border-color: color-mix(in srgb, var(--danger) 50%, transparent);
   color: var(--danger);
 }
@@ -1401,13 +1463,94 @@ body:has(#modelSelect option[value=""]:checked) .composer {
 
 /* ---------- Dar ekran ---------- */
 
+/* Oturum menü düğmesi: yalnızca dar ekranda görünür */
+.sidebar-toggle {
+  display: none;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  margin-left: -6px;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+}
+
+.sidebar-toggle:hover {
+  background: var(--panel);
+  color: var(--text);
+}
+
+.sidebar-toggle[aria-expanded="true"] {
+  color: var(--text);
+}
+
+@keyframes sidebar-in {
+  from {
+    opacity: 0;
+    transform: translate3d(-12px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 @media (max-width: 760px) {
   .shell {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  /* Kenar çubuğu normalde gizli; menü düğmesiyle üst katmanda açılır */
   .sidebar {
     display: none;
+  }
+
+  .app.is-sidebar-open::before {
+    content: "";
+    position: fixed;
+    top: 36px;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 39;
+    background: rgba(0, 0, 0, 0.5);
+    animation: fade-in 0.2s ease-out both;
+  }
+
+  .app.is-sidebar-open .sidebar {
+    display: flex;
+    position: fixed;
+    top: 36px;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    width: min(280px, 84vw);
+    box-shadow: 1px 0 0 var(--border-strong), 12px 0 40px -12px rgba(0, 0, 0, 0.6);
+    animation: sidebar-in 0.22s var(--ease) both;
+  }
+
+  .sidebar-toggle {
+    display: grid;
+  }
+
+  .chat-header {
+    justify-content: flex-start;
+    padding: 0 12px;
+  }
+
+  .chat-title {
+    flex: 1;
+  }
+
+  .chat-controls {
+    min-width: 0;
+    margin-left: auto;
+  }
+
+  .workspace-btn {
+    max-width: 150px;
   }
 
   .chat-controls .picker {
@@ -1420,6 +1563,11 @@ body:has(#modelSelect option[value=""]:checked) .composer {
   .notice,
   .empty {
     width: calc(100% - 32px);
+    max-width: calc(100% - 32px);
+  }
+
+  .code-wrap pre {
+    max-width: 100%;
   }
 }
 
