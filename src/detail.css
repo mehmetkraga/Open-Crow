@@ -223,10 +223,6 @@ textarea {
   transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.15s var(--ease-soft);
 }
 
-.new-chat:hover {
-  border-color: var(--border-strong);
-}
-
 .new-chat:active {
   transform: scale(0.985);
 }
@@ -254,15 +250,11 @@ textarea {
 }
 
 .session-item.is-active {
-  box-shadow: inset 2px 0 0 var(--accent);
+  box-shadow: inset 2px 0 0 var(--text-2);
 }
 
 .session-delete {
   transition: opacity 0.2s ease, color 0.15s ease, background-color 0.15s ease;
-}
-
-.session-delete:hover {
-  background: color-mix(in srgb, var(--danger) 12%, transparent);
 }
 
 /* ---------- Mesajlar ---------- */
