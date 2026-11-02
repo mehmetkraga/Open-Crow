@@ -148,7 +148,7 @@ textarea {
 }
 
 .composer:focus-within {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--border-strong));
+  border-color: color-mix(in srgb, var(--focus) 70%, var(--border-strong));
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent),
     0 0 26px -10px var(--glow),
@@ -171,14 +171,6 @@ textarea {
   z-index: 1;
 }
 
-.composer textarea::placeholder {
-  transition: opacity 0.2s ease;
-}
-
-.composer:focus-within textarea::placeholder {
-  opacity: 0.55;
-}
-
 /* ---------- Düğmeler ---------- */
 
 .send-btn {
@@ -190,6 +182,14 @@ textarea {
 
 .send-btn:hover:not(:disabled) {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent), var(--elev-1);
+}
+
+.send-btn:disabled {
+  box-shadow: none;
+}
+
+.send-btn.is-stop:hover:not(:disabled) {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--text) 18%, transparent), var(--elev-1);
 }
 
 .send-btn:active:not(:disabled) {

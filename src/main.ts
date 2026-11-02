@@ -529,6 +529,13 @@ function setBusy(busy: boolean): void {
   el.iconStop.toggleAttribute('hidden', !busy);
   el.input.disabled = busy;
   el.workspaceBtn.disabled = busy;
+  syncSendButton();
+}
+
+/** Meşgulken durdur düğmesi her zaman etkin; boşta metin yoksa gönder devre dışı. */
+function syncSendButton(): void {
+  const busy = el.sendBtn.classList.contains('is-stop');
+  el.sendBtn.disabled = !busy && el.input.value.trim() === '';
 }
 
 interface TurnView {
@@ -763,6 +770,7 @@ function makeBackend(kragaAPI: Api): ToolBackend {
 function autoResize(): void {
   el.input.style.height = 'auto';
   el.input.style.height = `${Math.min(el.input.scrollHeight, 220)}px`;
+  syncSendButton();
 }
 
 el.input.addEventListener('input', autoResize);
@@ -804,26 +812,72 @@ $<HTMLButtonElement>('btnNewChat').addEventListener('click', startNewChat);
 
 // ---------- Ayarlar penceresi ----------
 
+const btnOpenSettings = $<HTMLButtonElement>('btnOpenSettings');
+let settingsReturnFocus: HTMLElement | null = null;
+let backdropPressed = false;
+
+const MODAL_FOCUSABLE =
+  'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
+
 function openSettings(): void {
   const settings = readSettings();
   el.setBaseUrl.value = settings.baseUrl;
   el.setApiKey.value = settings.apiKey;
   el.settingsStatus.textContent = '';
+  el.settingsStatus.dataset.kind = '';
+  settingsReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   el.settingsOverlay.hidden = false;
   window.setTimeout(() => el.setBaseUrl.focus(), 0);
 }
 
 function closeSettings(): void {
+  if (el.settingsOverlay.hidden) return;
   el.settingsOverlay.hidden = true;
+  const back = settingsReturnFocus ?? btnOpenSettings;
+  settingsReturnFocus = null;
+  back.focus();
 }
 
-$<HTMLButtonElement>('btnOpenSettings').addEventListener('click', openSettings);
+/** Sekme tuşu modal dışına çıkmaz: ilk ve son odaklanabilir öğe arasında döner. */
+function trapTab(event: KeyboardEvent): void {
+  const items = Array.from(el.settingsOverlay.querySelectorAll<HTMLElement>(MODAL_FOCUSABLE));
+  if (items.length === 0) return;
+  const first = items[0];
+  const last = items[items.length - 1];
+  const active = document.activeElement;
+  const inside = active instanceof HTMLElement && el.settingsOverlay.contains(active);
+
+  if (!inside) {
+    event.preventDefault();
+    (event.shiftKey ? last : first).focus();
+  } else if (event.shiftKey && active === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && active === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
 $<HTMLButtonElement>('btnCloseSettings').addEventListener('click', closeSettings);
+btnOpenSettings.addEventListener('click', openSettings);
+
+// Arka plan tıklaması yalnızca basış da arka planda başladıysa kapatır;
+// metin seçerken alandan dışarı sürüklemek pencereyi kapatmaz.
+el.settingsOverlay.addEventListener('pointerdown', (event) => {
+  backdropPressed = event.target === el.settingsOverlay;
+});
 el.settingsOverlay.addEventListener('click', (event) => {
-  if (event.target === el.settingsOverlay) closeSettings();
+  if (backdropPressed && event.target === el.settingsOverlay) closeSettings();
+  backdropPressed = false;
 });
 window.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && !el.settingsOverlay.hidden) closeSettings();
+  if (el.settingsOverlay.hidden) return;
+  if (event.key === 'Escape') {
+    closeSettings();
+  } else if (event.key === 'Tab') {
+    trapTab(event);
+  }
 });
 
 el.settingsForm.addEventListener('submit', async (event) => {

@@ -20,6 +20,8 @@
   --ok: #4cb782;
   --danger: #eb5757;
   --attention: #828fff;
+  /* Kontrol sınırları (girdi, seçici, düğme çerçevesi) için en az 3:1 */
+  --control-line: color-mix(in srgb, var(--muted) 75%, transparent);
 
   --radius: 8px;
   --radius-sm: 6px;
@@ -323,6 +325,7 @@ button:disabled {
   text-overflow: ellipsis;
   font-size: 13px;
   font-weight: 500;
+  line-height: 28px;
   color: var(--text-2);
 }
 
@@ -330,24 +333,33 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex: none;
+  min-width: 0;
+  flex: 0 1 auto;
 }
 
 .workspace-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
   max-width: 200px;
   height: 28px;
+  margin: 0;
   padding: 0 8px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-line);
   border-radius: var(--radius-sm);
   background: transparent;
   font-size: 12.5px;
+  line-height: 1;
   color: var(--text-2);
 }
 
+.workspace-btn svg {
+  flex: none;
+}
+
 .workspace-btn span {
+  min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -355,14 +367,22 @@ button:disabled {
 
 .workspace-btn:hover:not(:disabled) {
   color: var(--text);
-  border-color: var(--border-strong);
+  border-color: var(--text-2);
+}
+
+.picker {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  margin: 0;
 }
 
 .picker select {
   height: 28px;
   max-width: 220px;
+  margin: 0;
   padding: 0 24px 0 8px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-line);
   border-radius: var(--radius-sm);
   background: transparent;
   font-size: 12.5px;
@@ -376,7 +396,7 @@ button:disabled {
 
 .picker select:hover {
   color: var(--text);
-  border-color: var(--border-strong);
+  border-color: var(--text-2);
 }
 
 .picker select option {
@@ -621,31 +641,37 @@ button:disabled {
   align-items: flex-end;
   gap: 8px;
   width: min(760px, calc(100% - 48px));
-  margin: 0 auto 16px;
-  padding: 8px 8px 8px 12px;
-  border: 1px solid var(--border-strong);
+  margin: 0 auto 6px;
+  padding: 8px 8px 8px 14px;
+  border: 1px solid var(--control-line);
   border-radius: 12px;
   background: var(--panel);
 }
 
 .composer:focus-within {
-  border-color: color-mix(in srgb, var(--focus) 60%, var(--border-strong));
+  border-color: var(--focus);
 }
 
 .composer textarea {
   flex: 1;
+  min-width: 0;
   min-height: 24px;
   max-height: 220px;
+  margin: 0;
   padding: 3px 0;
   border: 0;
   outline: none;
   resize: none;
+  overflow-y: auto;
   background: transparent;
+  font-size: 14px;
   line-height: 1.5;
+  caret-color: var(--accent-hover);
 }
 
 .composer textarea::placeholder {
   color: var(--muted);
+  opacity: 1;
 }
 
 .send-btn {
@@ -654,7 +680,8 @@ button:disabled {
   height: 30px;
   display: grid;
   place-items: center;
-  border: 0;
+  padding: 0;
+  border: 1px solid transparent;
   border-radius: 8px;
   background: var(--accent);
   color: var(--accent-ink);
@@ -664,10 +691,73 @@ button:disabled {
   opacity: 0.88;
 }
 
-.send-btn.is-stop {
+/* Boş metin: gönderilecek bir şey yok, düğme ana hatlarıyla kalır */
+.send-btn:disabled {
   background: transparent;
-  color: var(--text);
+  border-color: var(--control-line);
+  color: var(--muted);
+  opacity: 1;
+}
+
+/* Meşgul: durdur düğmesi nötr ve dolu, vurgu rengi kullanmaz */
+.send-btn.is-stop {
+  background: var(--text);
+  border-color: transparent;
+  color: var(--bg);
+}
+
+.send-btn.is-stop:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+/* Klavye ipucu: sakin, AA kontrastında ikincil metin */
+
+.composer-hint {
+  width: min(760px, calc(100% - 48px));
+  margin: 0 auto 14px;
+  padding: 0 4px;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--muted);
+}
+
+.composer-hint kbd {
+  padding: 0 4px;
   border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.composer-nomodel {
+  display: none;
+  color: var(--text-2);
+}
+
+.composer-nomodel::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--danger);
+  vertical-align: middle;
+}
+
+/* Model yokken: ipucu yerine uyarı, çerçeve kesikli */
+body:has(#modelSelect option[value=""]:checked) .composer-keys {
+  display: none;
+}
+
+body:has(#modelSelect option[value=""]:checked) .composer-nomodel {
+  display: inline;
+}
+
+body:has(#modelSelect option[value=""]:checked) .composer {
+  border-style: dashed;
 }
 
 /* ---------- Ayarlar penceresi ---------- */
@@ -735,44 +825,73 @@ button:disabled {
 
 .modal-form {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .field {
   display: grid;
-  gap: 5px;
+  gap: 6px;
 }
 
-.field span {
-  font-size: 12px;
+.field label {
+  font-size: 12.5px;
+  font-weight: 500;
   color: var(--text-2);
 }
 
 .field input {
-  height: 34px;
-  padding: 0 10px;
-  border: 1px solid var(--border);
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--control-line);
   border-radius: var(--radius-sm);
   background: var(--bg);
+  color: var(--text);
   outline: none;
+  caret-color: var(--accent-hover);
+}
+
+.field input::placeholder {
+  color: var(--muted);
+  opacity: 1;
 }
 
 .field input:focus {
   border-color: var(--focus);
 }
 
+.field-help {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Durum: metin her zaman okunur; renk ayrıca nokta ile belirtilir */
 .modal-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   min-height: 18px;
   font-size: 12.5px;
   color: var(--muted);
 }
 
-.modal-status[data-kind="ok"] {
-  color: var(--ok);
+.modal-status[data-kind="ok"],
+.modal-status[data-kind="error"] {
+  color: var(--text-2);
 }
 
-.modal-status[data-kind="error"] {
-  color: var(--danger);
+.modal-status[data-kind="ok"]::before,
+.modal-status[data-kind="error"]::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+
+.modal-status[data-kind="error"]::before {
+  background: var(--danger);
 }
 
 .modal-actions {
@@ -780,6 +899,17 @@ button:disabled {
   justify-content: space-between;
   align-items: center;
   margin-top: 2px;
+}
+
+.modal-actions .btn-danger {
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+  color: var(--text-2);
+}
+
+.modal-actions .btn-danger:hover {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  color: var(--text);
 }
 
 .btn-primary,
@@ -988,6 +1118,7 @@ button:disabled {
 
   .msg,
   .composer,
+  .composer-hint,
   .notice,
   .empty {
     width: calc(100% - 32px);
