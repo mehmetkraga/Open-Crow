@@ -27,6 +27,7 @@ const el = {
   modelSelect: $<HTMLSelectElement>('modelSelect'),
   messages: $<HTMLDivElement>('messages'),
   emptyState: $<HTMLDivElement>('emptyState'),
+  emptyTitle: $<HTMLHeadingElement>('emptyTitle'),
   emptyCopy: $<HTMLParagraphElement>('emptyCopy'),
   notice: $<HTMLDivElement>('notice'),
   composer: $<HTMLFormElement>('composer'),
@@ -441,9 +442,10 @@ function folderName(path: string): string {
 function updateWorkspaceUi(): void {
   el.workspaceName.textContent = workspace ? folderName(workspace) : 'Klasör seç';
   el.workspaceBtn.title = workspace ?? 'Çalışma klasörü seç';
+  el.emptyTitle.textContent = workspace ? folderName(workspace) : 'Çalışma klasörü seçilmedi';
   el.emptyCopy.textContent = workspace
-    ? `Çalışma klasörün: ${workspace}. Dosyaları okuyup düzenleyebilir, komut çalıştırabilirim.`
-    : 'Önce bir çalışma klasörü seç; ardından dosyaları okuyup düzenleyebilirim.';
+    ? `${workspace} içinde dosya okuyabilir, düzenleyebilir ve komut çalıştırabilirim.`
+    : 'Dosyaları okuyup düzenlemem için önce üst çubuktan bir çalışma klasörü seç.';
 }
 
 function setWorkspace(path: string | null, persistGlobal = true): void {
