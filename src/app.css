@@ -118,23 +118,28 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   height: 36px;
-  padding-left: 12px;
+  padding-left: 16px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   flex: none;
   user-select: none;
 }
 
+/* Marka, kenar çubuğunun metin sütunuyla (16px) aynı hizada başlar. */
 .titlebar-brand {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
   font-size: 12px;
   font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
   color: var(--text-2);
 }
 
 .titlebar-logo {
+  flex: none;
   width: 14px;
   height: 14px;
   border-radius: 3px;
@@ -151,7 +156,9 @@ button:disabled {
   height: 100%;
   display: grid;
   place-items: center;
+  padding: 0;
   border: 0;
+  border-radius: 0;
   background: transparent;
   color: var(--muted);
 }
@@ -161,9 +168,24 @@ button:disabled {
   color: var(--text);
 }
 
+.win-btn:active {
+  background: var(--border-strong);
+}
+
+/* Kapat: tehlike rengi yalnızca üzerine gelindiğinde; beyaz ikon tokenlı kırmızı zeminde. */
 .win-btn-close:hover {
-  background: #e81123;
-  color: #fff;
+  background: var(--danger);
+  color: var(--accent-ink);
+}
+
+.win-btn-close:active {
+  background: var(--danger);
+  color: var(--accent-ink);
+  opacity: 0.85;
+}
+
+.win-btn:focus-visible {
+  outline-offset: -2px;
 }
 
 .shell {
@@ -179,52 +201,81 @@ button:disabled {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 10px 8px 8px;
+  padding: 12px 8px 8px;
   background: var(--surface);
   border-right: 1px solid var(--border);
 }
 
+/* Yeni sohbet: sidebar'ın birincil eylemi. Dolgulu yüzey, kalın metin;
+   tek vurgu rengi yalnızca ikonda (dolgu indigo değil). */
 .new-chat {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 7px 10px;
-  border: 1px solid var(--border);
+  min-height: 32px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
-  background: transparent;
+  background: var(--panel);
   font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
   color: var(--text);
+  text-align: left;
+}
+
+.new-chat svg {
+  flex: none;
+  color: var(--accent-hover);
 }
 
 .new-chat:hover {
-  background: var(--panel);
+  background: color-mix(in srgb, var(--panel) 70%, var(--text) 6%);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border-strong));
 }
 
 .session-groups {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  margin: 10px 0 6px;
+  margin: 12px 0 0;
+  padding-right: 2px;
 }
 
+/* Gruplar (Bugün / Daha önce): küçük, sakin etiket; ikinci grup üstten ayrılır. */
 .session-group-label {
-  padding: 10px 8px 4px;
+  padding: 12px 8px 4px;
   font-size: 11px;
   font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
   color: var(--muted);
+}
+
+.session-groups > .session-group-label:first-child {
+  padding-top: 4px;
 }
 
 .session-empty {
   margin: 0;
-  padding: 6px 8px;
+  padding: 8px;
   font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.session-empty-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
   color: var(--muted);
 }
 
 .session-item {
   display: flex;
   align-items: center;
+  min-height: 32px;
   border-radius: var(--radius-sm);
 }
 
@@ -232,8 +283,13 @@ button:disabled {
   background: var(--panel);
 }
 
+/* Aktif oturum: yüzey + sol kenarda ince çizgi (app.css'teki box-shadow). Metin kalınlaşır, zıplamaz. */
 .session-item.is-active {
   background: var(--panel);
+}
+
+.session-item.is-active .session-title {
+  font-weight: 500;
 }
 
 .session-title {
@@ -241,53 +297,89 @@ button:disabled {
   min-width: 0;
   padding: 6px 8px;
   border: 0;
+  border-radius: var(--radius-sm);
   background: transparent;
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 13px;
+  line-height: 1.4;
   color: var(--text-2);
+}
+
+.session-item:hover .session-title {
+  color: var(--text);
 }
 
 .session-item.is-active .session-title {
   color: var(--text);
 }
 
+/* Klavye odağı: satır içinde kalan iç çizgi (dış çizgi overflow:hidden ile kırpılırdı). */
+.session-title:focus-visible,
+.session-delete:focus-visible {
+  outline-offset: -2px;
+}
+
+.session-item:has(.session-title:focus-visible) {
+  background: var(--panel);
+}
+
 .session-delete {
   flex: none;
-  width: 22px;
-  height: 22px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
   margin-right: 4px;
+  padding: 0;
   border: 0;
   border-radius: 5px;
   background: transparent;
   color: var(--muted);
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1;
   opacity: 0;
 }
 
+/* Silme düğmesi: fare, aktif satır veya klavye odağıyla görünür. */
 .session-item:hover .session-delete,
-.session-item.is-active .session-delete {
+.session-item.is-active .session-delete,
+.session-item:focus-within .session-delete {
   opacity: 1;
 }
 
+/* Yanlışlıkla tıklamaya karşı net durum: kırmızı zemin + kırmızı ikon. */
 .session-delete:hover {
   color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+}
+
+.session-delete:active {
+  background: color-mix(in srgb, var(--danger) 22%, transparent);
 }
 
 .side-footer {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: none;
   width: 100%;
-  padding: 7px 8px;
+  min-height: 32px;
+  margin-top: 8px;
+  padding: 6px 8px;
   border: 0;
   border-radius: var(--radius-sm);
   background: transparent;
   font-size: 13px;
+  line-height: 1.4;
   color: var(--text-2);
+  text-align: left;
+}
+
+.side-footer svg {
+  flex: none;
 }
 
 .side-footer:hover {

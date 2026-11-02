@@ -364,6 +364,10 @@ async function refreshSessionList(): Promise<void> {
     const empty = document.createElement('p');
     empty.className = 'session-empty';
     empty.textContent = 'Henüz sohbet yok';
+    const hint = document.createElement('span');
+    hint.className = 'session-empty-hint';
+    hint.textContent = 'Yeni sohbet başlattığında burada görünür.';
+    empty.appendChild(hint);
     el.sessionList.appendChild(empty);
     return;
   }
@@ -395,15 +399,17 @@ function createSessionItem(session: ChatSession): HTMLElement {
   const title = document.createElement('button');
   title.type = 'button';
   title.className = 'session-title';
-  title.textContent = session.title || 'Yeni sohbet';
-  title.title = session.workspace ?? '';
+  const label = session.title || 'Yeni sohbet';
+  title.textContent = label;
+  // Kesilen başlık tam metniyle ipucunda görünsün; çalışma klasörü ikinci satırda.
+  title.title = session.workspace ? `${label}\n${session.workspace}` : label;
   title.addEventListener('click', () => void openSession(session.id));
 
   const remove = document.createElement('button');
   remove.type = 'button';
   remove.className = 'session-delete';
   remove.title = 'Sohbeti sil';
-  remove.setAttribute('aria-label', 'Sohbeti sil');
+  remove.setAttribute('aria-label', `${label} sohbetini sil`);
   remove.textContent = '×';
   remove.addEventListener('click', async (event) => {
     event.stopPropagation();
