@@ -42,6 +42,9 @@
 
       <main class="chat">
         <header class="chat-header">
+          <button type="button" class="sidebar-toggle" id="btnSidebarToggle" aria-label="Oturumlar" aria-expanded="false" title="Oturumlar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
           <h1 class="chat-title" id="chatTitle">Yeni sohbet</h1>
           <div class="chat-controls">
             <button type="button" class="workspace-btn" id="workspaceBtn" title="Çalışma klasörü seç">
@@ -67,7 +70,7 @@
           <div class="empty" id="emptyState">
             <h2 id="emptyTitle">Çalışma klasörü seçilmedi</h2>
             <p id="emptyCopy">Dosyaları okuyup düzenlemem için önce üst çubuktan bir çalışma klasörü seç.</p>
-            <div class="suggestions">
+            <div class="suggestions" role="group" aria-label="Hızlı öneriler">
               <button type="button" class="suggestion" data-prompt="Bu projenin yapısını ve ana bileşenlerini özetle.">Projenin yapısını özetle</button>
               <button type="button" class="suggestion" data-prompt="Testleri çalıştır, başarısız olanları bul ve nedenlerini açıkla.">Testleri çalıştır ve hataları bul</button>
               <button type="button" class="suggestion" data-prompt="README dosyasını projenin mevcut durumuna göre güncelle.">README'yi güncelle</button>
@@ -75,7 +78,13 @@
           </div>
         </div>
 
-        <div class="notice" id="notice" hidden></div>
+        <div class="notice" id="notice" role="status" aria-live="polite" hidden>
+          <span class="notice-tag"></span>
+          <span class="notice-text"></span>
+          <button type="button" class="notice-close" id="noticeClose" aria-label="Bildirimi kapat" title="Kapat (Esc)">
+            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" stroke-width="1.2"/></svg>
+          </button>
+        </div>
 
         <form class="composer" id="composer">
           <textarea id="input" rows="1" placeholder="Bir şey yaz… (Enter gönderir, Shift+Enter yeni satır)"></textarea>
